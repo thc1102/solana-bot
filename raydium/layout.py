@@ -17,6 +17,15 @@ def PublicKeyLayout():
     return PublicKeyAdapter(Bytes(32))
 
 
+# 定义一个自定义的解析器，用于解析 128 位整数
+class U128Adapter(Adapter):
+    def _decode(self, obj, context, path):
+        return int.from_bytes(obj, byteorder='little', signed=False)
+
+
+# 定义 U128 类型，使用自定义解析器
+U128 = U128Adapter(Bytes(16))
+
 # 直接在Struct中使用Bytes(16)定义128位无符号整数字段
 LIQUIDITY_STATE_LAYOUT_V4 = Struct(
     "status" / Int64ul,
@@ -51,11 +60,11 @@ LIQUIDITY_STATE_LAYOUT_V4 = Struct(
     "punishPcAmount" / Int64ul,
     "punishCoinAmount" / Int64ul,
     "orderbookToInitTime" / Int64ul,
-    "swapBaseInAmount" / Bytes(16),
-    "swapQuoteOutAmount" / Bytes(16),
+    "swapBaseInAmount" / U128,
+    "swapQuoteOutAmount" / U128,
     "swapBase2QuoteFee" / Int64ul,
-    "swapQuoteInAmount" / Bytes(16),
-    "swapBaseOutAmount" / Bytes(16),
+    "swapQuoteInAmount" / U128,
+    "swapBaseOutAmount" / U128,
     "swapQuote2BaseFee" / Int64ul,
     "baseVault" / PublicKeyLayout(),
     "quoteVault" / PublicKeyLayout(),
@@ -72,7 +81,6 @@ LIQUIDITY_STATE_LAYOUT_V4 = Struct(
     "lpReserve" / Int64ul,
     Padding(24),  # 3个u64的padding，每个u64是8字节
 )
-
 
 SPL_ACCOUNT_LAYOUT = Struct(
     "mint" / PublicKeyLayout(),  # 假设publicKey为长度为32的字符串

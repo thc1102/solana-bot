@@ -11,6 +11,8 @@ from solders.pubkey import Pubkey
 
 from raydium.layout import LIQUIDITY_STATE_LAYOUT_V4
 
+from loguru import logger
+
 DEFAULT_PUBLIC_LIST = [Pubkey.from_string("11111111111111111111111111111111"),
                        Pubkey.from_string("So11111111111111111111111111111111111111112")]
 
@@ -26,17 +28,19 @@ async def parse_raydium_data(data: Bytes):
         if pool_state.baseMint in DEFAULT_PUBLIC_LIST:
             return
         if run_timestamp - pool_open_time < 0:
-            print("查找到流动池", pool_state.baseMint, "未开盘")
-        if True or run_timestamp - pool_open_time < START_TIME:
-            print("查找到流动池", pool_state.baseMint, "运行时间", run_timestamp - pool_open_time)
+            logger.info(f"查找到流动池 {pool_state} 未开盘 开盘时间 {pool_open_time}")
+            print(pool_state)
+
+        if run_timestamp - pool_open_time < START_TIME:
             # await check_raydium_liquidity(pool_state.baseMint)
+            logger.info(f"检测到流动池变动 {pool_state.baseMint} 运行时间 {run_timestamp-pool_open_time} s")
     except Exception as e:
         # 遇见无法解析的直接跳过 不处理
         pass
 
 
 async def check_raydium_liquidity(pubkey):
-    async with AsyncClient("https://dimensional-frequent-wave.solana-mainnet.quiknode.pro/ab01b5056e35be398d8fa71f3d305c7848bf23fb") as client:
+    async with AsyncClient("wss://mainnet.helius-rpc.com/?api-key=662f50ce-8a1d-4d1d-8d28-ec62db019c7e") as client:
         try:
             res = await client.get_account_info(pubkey)
             print(res)
@@ -47,7 +51,7 @@ async def main():
     while True:
         try:
             async with connect(
-                    "wss://dimensional-frequent-wave.solana-mainnet.quiknode.pro/ab01b5056e35be398d8fa71f3d305c7848bf23fb") as websocket:
+                    "wss://mainnet.helius-rpc.com/?api-key=662f50ce-8a1d-4d1d-8d28-ec62db019c7e") as websocket:
                 await websocket.program_subscribe(
                     Pubkey.from_string("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"),
                     Finalized, "base64"
@@ -57,16 +61,16 @@ async def main():
                 async for idx, updated_account_info in enumerate(websocket):
                     try:
                         data = updated_account_info[0].result.value.account.data
-                        # asyncio.create_task(parse_raydium_data(data))
-                        await parse_raydium_data(data)
+                        asyncio.create_task(parse_raydium_data(data))
+                        # await parse_raydium_data(data)
                     except Exception:
                         pass
                 await websocket.program_unsubscribe(subscription_id)
         except (ConnectionResetError, websockets.exceptions.ConnectionClosedError) as e:
-            print(f"Error occurred: {e}. Retrying...")
+            logger.error(f"Error occurred: {e}. Retrying...")
             continue
         except Exception as e:
-            print(f"Unexpected error occurred: {e}")
+            logger.error(f"Unexpected error occurred: {e}")
 
 
 asyncio.run(main())
