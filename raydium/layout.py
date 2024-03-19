@@ -1,4 +1,4 @@
-from construct import Struct, Int64ul, Padding, Bytes, Adapter
+from construct import *
 from solders.pubkey import Pubkey
 
 
@@ -71,4 +71,19 @@ LIQUIDITY_STATE_LAYOUT_V4 = Struct(
     "owner" / PublicKeyLayout(),
     "lpReserve" / Int64ul,
     Padding(24),  # 3个u64的padding，每个u64是8字节
+)
+
+
+SPL_ACCOUNT_LAYOUT = Struct(
+    "mint" / PublicKeyLayout(),  # 假设publicKey为长度为32的字符串
+    "owner" / PublicKeyLayout(),
+    "amount" / Int64ub,
+    "delegateOption" / Int32ub,
+    "delegate" / PublicKeyLayout(),
+    "state" / Byte,
+    "isNativeOption" / Int32ub,
+    "isNative" / Int64ub,
+    "delegatedAmount" / Int64ub,
+    "closeAuthorityOption" / Int32ub,
+    "closeAuthority" / PublicKeyLayout(),
 )

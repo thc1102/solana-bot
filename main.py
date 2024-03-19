@@ -4,6 +4,7 @@ import time
 import websockets
 from asyncstdlib import enumerate
 from construct import Bytes
+from solana.rpc.async_api import AsyncClient
 from solana.rpc.commitment import Finalized
 from solana.rpc.websocket_api import connect
 from solders.pubkey import Pubkey
@@ -13,7 +14,7 @@ from raydium.layout import LIQUIDITY_STATE_LAYOUT_V4
 DEFAULT_PUBLIC_LIST = [Pubkey.from_string("11111111111111111111111111111111"),
                        Pubkey.from_string("So11111111111111111111111111111111111111112")]
 
-START_TIME = 60
+START_TIME = 50
 
 
 async def parse_raydium_data(data: Bytes):
@@ -26,18 +27,27 @@ async def parse_raydium_data(data: Bytes):
             return
         if run_timestamp - pool_open_time < 0:
             print("查找到流动池", pool_state.baseMint, "未开盘")
-        if run_timestamp - pool_open_time < START_TIME:
+        if True or run_timestamp - pool_open_time < START_TIME:
             print("查找到流动池", pool_state.baseMint, "运行时间", run_timestamp - pool_open_time)
+            # await check_raydium_liquidity(pool_state.baseMint)
     except Exception as e:
         # 遇见无法解析的直接跳过 不处理
         pass
 
 
+async def check_raydium_liquidity(pubkey):
+    async with AsyncClient("https://dimensional-frequent-wave.solana-mainnet.quiknode.pro/ab01b5056e35be398d8fa71f3d305c7848bf23fb") as client:
+        try:
+            res = await client.get_account_info(pubkey)
+            print(res)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
 async def main():
     while True:
         try:
             async with connect(
-                    "wss://mainnet.helius-rpc.com/?api-key=662f50ce-8a1d-4d1d-8d28-ec62db019c7e") as websocket:
+                    "wss://dimensional-frequent-wave.solana-mainnet.quiknode.pro/ab01b5056e35be398d8fa71f3d305c7848bf23fb") as websocket:
                 await websocket.program_subscribe(
                     Pubkey.from_string("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"),
                     Finalized, "base64"
@@ -47,7 +57,8 @@ async def main():
                 async for idx, updated_account_info in enumerate(websocket):
                     try:
                         data = updated_account_info[0].result.value.account.data
-                        asyncio.create_task(parse_raydium_data(data))
+                        # asyncio.create_task(parse_raydium_data(data))
+                        await parse_raydium_data(data)
                     except Exception:
                         pass
                 await websocket.program_unsubscribe(subscription_id)

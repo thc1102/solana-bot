@@ -1,7 +1,13 @@
 from solana.rpc.api import Client
+from solana.rpc.types import TokenAccountOpts
 from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 
+from raydium.layout import SPL_ACCOUNT_LAYOUT
+
+def convert_lamports_to_sol(lamports):
+    # 假设代币用9个小数点表示
+    return lamports / 1e9
 
 class Wallet:
     def __init__(self, private_key_str):
@@ -24,19 +30,24 @@ class RpcResponseError:
 
 if __name__ == '__main__':
     rpc_url = 'https://dimensional-frequent-wave.solana-mainnet.quiknode.pro/ab01b5056e35be398d8fa71f3d305c7848bf23fb'
-    wallet = Wallet("")
-    print(wallet.get_wallet_pubkey())
-    wsol_token_address = 'So11111111111111111111111111111111111111112'
+    wallet = Wallet("3Sn6Xoruw3sdYrPoorvW9pj3niJKNaHuwU6uV1vxMZASrbdGfDwnjBTcawzg5bCcRJTSes1yvb8NZquVVwakSFFb")
     # 创建Solana RPC客户端
     client = Client(rpc_url)
 
-    # 获取wSOL代币的Token ID
-    wsol_token_id = Pubkey.from_string(wsol_token_address)
-    print(wsol_token_id)
+    token_accounts = client.get_balance(
+        wallet.get_wallet_pubkey()
+    )
+    print(convert_lamports_to_sol(token_accounts.value))
+
     # 获取钱包地址对应的wSOL代币余额
     try:
-        balance = client.get_token_account_balance(wallet.get_wallet_pubkey())
+        balance = client.get_token_accounts_by_owner(wallet.get_wallet_pubkey(), TokenAccountOpts(
+            program_id=Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")))
         print("钱包地址:", wallet.get_wallet_pubkey())
-        print("SOL余额:", balance)
+        print(len(balance.value))
+        for i in balance.value:
+            data = SPL_ACCOUNT_LAYOUT.parse(i.account.data)
+            print(data)
     except RpcResponseError as e:
         print("无法获取wSOL余额:", e)
+
