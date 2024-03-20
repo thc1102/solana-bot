@@ -24,3 +24,4 @@ websockets==11.0.3
 yarl==1.9.4
 base58~=2.1.1
 loguru~=0.7.2
+requests~=2.31.0
