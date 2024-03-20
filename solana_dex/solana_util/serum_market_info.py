@@ -22,6 +22,7 @@ async def get_market_info(client: AsyncClient, market_address: any):
     else:
         market_pub_key = Pubkey(market_address)
     market_info = await client_wrapper.get_account_info(client, market_pub_key)
+    print(market_info)
     return MARKET_STATE_LAYOUT_V2.parse(market_info.value.data)
 
 

@@ -9,6 +9,7 @@ from solders.message import MessageV0
 from solders.pubkey import Pubkey
 from solders.token.associated import get_associated_token_address
 from solders.transaction import VersionedTransaction
+from spl.token.async_client import AsyncToken
 from spl.token.client import Token
 from spl.token.constants import WRAPPED_SOL_MINT
 from spl.token.instructions import (
@@ -100,7 +101,7 @@ class SwapTransactionBuilder:
             check_associated_token_account_exists=True,
     ):
         # lamports to pay for rent + transfer
-        pay_for_rent = Token.get_min_balance_rent_for_exempt_for_account(self.client)
+        pay_for_rent = await AsyncToken.get_min_balance_rent_for_exempt_for_account(self.client)
         lamports = pay_for_rent + amount_in
         # compute budget
         await self.append_set_compute_budget(self.unit_price, self.unit_budget)
@@ -213,9 +214,9 @@ class SwapTransactionBuilder:
         )
 
     async def append_if_not_exists_create_associated_token_account(self, mint: Pubkey):
-        arr = await client_wrapper.get_token_accounts_by_owner(
+        arr = (await client_wrapper.get_token_accounts_by_owner(
             self.client, self.payer.pubkey(), TokenAccountOpts(mint)
-        ).value
+        )).value
 
         if len(arr) > 0:
             return

@@ -24,6 +24,8 @@ async def parse_raydium_data(data: Bytes):
     try:
         pool_state = LIQUIDITY_STATE_LAYOUT_V4.parse(data)
         pool_open_time = pool_state.poolOpenTime
+        print(pool_state)
+
         # 跳过默认地址
         if pool_state.baseMint in DEFAULT_PUBLIC_LIST:
             return

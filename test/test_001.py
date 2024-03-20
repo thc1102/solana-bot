@@ -9,6 +9,7 @@ from solders.pubkey import Pubkey
 
 from solana_dex.common.direction import Direction
 from solana_dex.raydium_pool import RaydiumPool
+from solana_dex.solana_util.serum_market_info import get_market_info
 from solana_dex.swap import Swap
 from solana_dex.wallet import Wallet
 
@@ -33,6 +34,7 @@ async def run():
     pool = RaydiumPool(client, "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA")
     await pool.initialization_task
     swap = Swap(client, pool)
+    print(pool.get_price(10.0, Direction.SPEND_BASE_TOKEN))
     await swap.buy(1.0, 0.1, keypair)
     # await swap.get_pool_lp_locked_ratio(Keypair.from_base58_string(
     #     "3Sn6Xoruw3sdYrPoorvW9pj3niJKNaHuwU6uV1vxMZASrbdGfDwnjBTcawzg5bCcRJTSes1yvb8NZquVVwakSFFb"))

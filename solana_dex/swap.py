@@ -110,6 +110,7 @@ class Swap:
         swap_transaction_builder = SwapTransactionBuilder(self.client, self.pool, payer)
         await swap_transaction_builder.append_buy(amount_in, amount_out, True)
         transaction = swap_transaction_builder.compile_versioned_transaction()
+        print(transaction)
         txn_signature = await client_wrapper.send_transaction(self.client, transaction).value
         # 等待确认
         resp = await client_wrapper.confirm_transaction(
