@@ -19,7 +19,9 @@ def convert_camel_case_to_snake_case(name: str) -> str:
 
 
 def preprocess_key(key: str) -> str:
-    return convert_camel_case_to_snake_case(key)
+    # 不进行驼峰转换
+    # convert_camel_case_to_snake_case(key)
+    return key
 
 
 def u8(key: str):

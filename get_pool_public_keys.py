@@ -45,7 +45,7 @@ async def gen_pool(amm_id, ctx):
                     pass
 
             market_decoded = MARKET_LAYOUT.parse(marketInfo)
-
+            print(market_decoded.vault_signer_nonce)
             pool_keys = {
                 "amm_id": amm_id,
                 "base_mint": Pubkey.from_bytes(market_decoded.base_mint),

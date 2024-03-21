@@ -7,7 +7,8 @@ from solana.rpc.types import MemcmpOpts, DataSliceOpts
 from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
 
-from orm.crud.raydium_pool import RaydiumPoolHelper
+from orm.crud.raydium import create_market_state
+from orm.models.raydium import MarketState
 from settings.config import Config
 from solana_dex_v1.common.constants import OPENBOOK_MARKET, SOL_MINT_ADDRESS
 from solana_dex_v1.layout.serum_layout import MARKET_STATE_LAYOUT_V3
@@ -18,11 +19,13 @@ exclude_address_set = set()
 async def parse_openbook_data(data):
     try:
         info = MARKET_STATE_LAYOUT_V3.parse(data.result.value.account.data)
-        # print(info)
-        if info.base_mint in exclude_address_set:
+        if info.baseMint in exclude_address_set:
             return
-        print(data.result.value.pubkey, info)
-        exclude_address_set.add(info.base_mint)
+        exclude_address_set.add(info.baseMint)
+        await create_market_state(
+            {"baseMint": info.baseMint, "eventQueue": info.eventQueue, "bids": info.bids, "asks": info.asks,
+             "vaultSignerNonce": info.vaultSignerNonce}
+        )
     except Exception as e:
         logger.exception(e)
 

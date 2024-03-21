@@ -9,9 +9,11 @@ from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
 from solders.pubkey import Pubkey
 
+from orm.crud.raydium import get_market_state
 from settings.config import Config
 from solana_dex_v1.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, SOL_MINT_ADDRESS
 from solana_dex_v1.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
+from solana_dex_v1.raydium.models import ApiPoolInfo
 
 exclude_address_set = set()
 
@@ -20,16 +22,23 @@ async def parse_liqudity_data(data):
     run_timestamp = time.time()
     try:
         pool_state = LIQUIDITY_STATE_LAYOUT_V4.parse(data.result.value.account.data)
-        if pool_state.base_mint in exclude_address_set:
+        if pool_state.baseMint in exclude_address_set:
             return
-        pool_open_time = pool_state.pool_open_time
-        if run_timestamp - pool_open_time < 0:
-             logger.info(f"未开盘 开盘时间 {pool_open_time}")
-             # logger.info(f"查找到流动池 {pool_state}")
-        if run_timestamp - pool_open_time < 60:
-            exclude_address_set.add(pool_state.base_mint)
-            # await check_raydium_liquidity(pool_state.baseMint)
-            logger.info(f"检测到流动池变动 {data.result.value.pubkey} MINT地址 {pool_state.base_mint} 运行时间 {run_timestamp - pool_open_time} s")
+        poolOpenTime = pool_state.poolOpenTime
+        if run_timestamp - poolOpenTime < 0:
+            logger.info(f"未开盘 开盘时间 {poolOpenTime}")
+            # logger.info(f"查找到流动池 {pool_state}")
+        if run_timestamp - poolOpenTime < 60:
+            market_state = await get_market_state(pool_state.baseMint)
+            if market_state:
+                exclude_address_set.add(pool_state.baseMint)
+                # await check_raydium_liquidity(pool_state.baseMint)
+                logger.info(
+                    f"检测到流动池变动 {data.result.value.pubkey} MINT地址 {pool_state.baseMint} 运行时间 {run_timestamp - poolOpenTime}")
+                # logger.info(ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model()))
+            else:
+                logger.info(
+                    f"检测到流动池变动 {data.result.value.pubkey} MINT地址 {pool_state.baseMint} 运行时间 {run_timestamp - poolOpenTime} 市场情况 暂无")
             # logger.info(f"查找到流动池 {pool_state}")
     except Exception as e:
         logger.info(e)
@@ -42,11 +51,11 @@ async def run():
             async with connect(Config.RPC_WEBSOCKET_ENDPOINT, max_queue=None) as wss:
                 await wss.program_subscribe(
                     RAYDIUM_LIQUIDITY_POOL_V4, Confirmed, "base64",
-                    # data_slice=DataSliceOpts(length=752, offset=0),
+                    data_slice=DataSliceOpts(length=752, offset=0),
                     filters=[
                         MemcmpOpts(offset=432, bytes="So11111111111111111111111111111111111111112"),
                         MemcmpOpts(offset=560, bytes="srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"),
-                        # MemcmpOpts(offset=0, bytes="21D35quxec7")
+                        MemcmpOpts(offset=0, bytes="21D35quxec7")
                     ]
                 )
                 first_resp = await wss.recv()

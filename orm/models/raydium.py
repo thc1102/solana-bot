@@ -1,6 +1,8 @@
 from tortoise import fields
 from tortoise.models import Model
 
+from solana_dex_v1.raydium.models import MinimalMarketState
+
 
 class RaydiumPool(Model):
     id = fields.CharField(max_length=100, pk=True)
@@ -32,3 +34,23 @@ class RaydiumPool(Model):
 
     class Meta:
         table = "raydium_pool"
+
+
+class MarketState(Model):
+    baseMint = fields.CharField(max_length=50)
+    eventQueue = fields.CharField(max_length=50)
+    bids = fields.CharField(max_length=50)
+    asks = fields.CharField(max_length=50)
+    vaultSignerNonce = fields.IntField()
+
+    class Meta:
+        table = "market_state"
+
+    def to_str(self):
+        return f"eventQueue {self.eventQueue} bids {self.bids} asks {self.asks}"
+
+    def to_json(self):
+        pass
+
+    def to_model(self):
+        return MinimalMarketState(self.eventQueue, self.bids, self.asks, self.vaultSignerNonce)

@@ -1,3 +1,5 @@
+import asyncio
+
 from solana.rpc.commitment import Commitment
 from solders.pubkey import Pubkey
 
@@ -20,3 +22,4 @@ class SolanaRPCClient:
             dict: 指定地址的账户信息
         """
         return await GlobalVariables.SolaraClient.get_account_info(address, commitment)
+
