@@ -1,3 +1,5 @@
+import time
+
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.commitment import Confirmed
 
@@ -10,16 +12,18 @@ RPC_HTTPS_URL = "https://dimensional-frequent-wave.solana-mainnet.quiknode.pro/a
 
 async def test():
     amm_id = "481zvrYvFh9jiGBgxj3PZ7rNAFkKtagoGeLoWPJC9xG6"  # test
-
+    #
     ctx = AsyncClient(RPC_HTTPS_URL, commitment=Confirmed)
+    #
+    # keys_in_the_form_strings = await gen_pool_strings(amm_id, ctx)
+    # print(keys_in_the_form_strings)
+    #
+    # print("*" * 500)
 
-    keys_in_the_form_strings = await gen_pool_strings(amm_id, ctx)
-    print(keys_in_the_form_strings)
-
-    print("*" * 500)
-
+    t= time.time()
     keys_in_the_form_of_public_keys = await gen_pool_public_keys(amm_id, ctx)
     print(keys_in_the_form_of_public_keys)
+    print(time.time()-t)
 
 
 asyncio.run(test())

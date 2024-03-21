@@ -18,11 +18,10 @@ exclude_address_set = set()
 async def parse_openbook_data(data):
     try:
         info = MARKET_STATE_LAYOUT_V3.parse(data.result.value.account.data)
+        # print(info)
         if info.base_mint in exclude_address_set:
             return
-        if not await RaydiumPoolHelper.get_pool_by_mint(str(info.base_mint)):
-            return
-        print(data.result.value.pubkey, info.base_mint)
+        print(data.result.value.pubkey, info)
         exclude_address_set.add(info.base_mint)
     except Exception as e:
         logger.exception(e)

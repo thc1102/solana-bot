@@ -22,17 +22,16 @@ async def parse_liqudity_data(data):
         pool_state = LIQUIDITY_STATE_LAYOUT_V4.parse(data.result.value.account.data)
         if pool_state.base_mint in exclude_address_set:
             return
-        # print(data.result.value.pubkey, pool_state)
         pool_open_time = pool_state.pool_open_time
         if run_timestamp - pool_open_time < 0:
-            logger.info(f"查找到流动池 {pool_state} 未开盘 开盘时间 {pool_open_time}")
-
+             logger.info(f"未开盘 开盘时间 {pool_open_time}")
+             # logger.info(f"查找到流动池 {pool_state}")
         if run_timestamp - pool_open_time < 60:
             exclude_address_set.add(pool_state.base_mint)
             # await check_raydium_liquidity(pool_state.baseMint)
             logger.info(f"检测到流动池变动 {data.result.value.pubkey} MINT地址 {pool_state.base_mint} 运行时间 {run_timestamp - pool_open_time} s")
+            # logger.info(f"查找到流动池 {pool_state}")
     except Exception as e:
-        print(data)
         logger.info(e)
 
 
@@ -42,13 +41,13 @@ async def run():
         try:
             async with connect(Config.RPC_WEBSOCKET_ENDPOINT, max_queue=None) as wss:
                 await wss.program_subscribe(
-                    Pubkey.from_string("7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5"), Confirmed, "base64",
+                    RAYDIUM_LIQUIDITY_POOL_V4, Confirmed, "base64",
                     # data_slice=DataSliceOpts(length=752, offset=0),
-                    # filters=[
-                    #     MemcmpOpts(offset=432, bytes="So11111111111111111111111111111111111111112"),
-                    #     MemcmpOpts(offset=560, bytes="srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"),
-                    #     MemcmpOpts(offset=0, bytes="21D35quxec7")
-                    # ]
+                    filters=[
+                        MemcmpOpts(offset=432, bytes="So11111111111111111111111111111111111111112"),
+                        MemcmpOpts(offset=560, bytes="srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"),
+                        # MemcmpOpts(offset=0, bytes="21D35quxec7")
+                    ]
                 )
                 first_resp = await wss.recv()
                 subscription_id = first_resp[0].result

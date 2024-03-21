@@ -10,15 +10,15 @@ from solana_dex_v1.websocket import openbook, liquidity
 
 
 async def run():
-    await Tortoise.init(
-        db_url='sqlite://db.sqlite3',
-        modules={'models': ['orm.models.raydium_pool']}
-    )
-    pool_count = await RaydiumPoolHelper.get_pool_count()
-    logger.info(f"当前缓存流动池条数 {pool_count}")
+    # await Tortoise.init(
+    #     db_url='sqlite://db.sqlite3',
+    #     modules={'models': ['orm.models.raydium_pool']}
+    # )
+    # pool_count = await RaydiumPoolHelper.get_pool_count()
+    # logger.info(f"当前缓存流动池条数 {pool_count}")
     stop_event = asyncio.Event()
-    # asyncio.create_task(openbook.run())
-    asyncio.create_task(liquidity.run())
+    asyncio.create_task(openbook.run())
+    # asyncio.create_task(liquidity.run())
     await stop_event.wait()
 
 
