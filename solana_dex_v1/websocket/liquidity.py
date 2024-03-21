@@ -14,6 +14,7 @@ from settings.config import Config
 from solana_dex_v1.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, SOL_MINT_ADDRESS
 from solana_dex_v1.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
 from solana_dex_v1.raydium.models import ApiPoolInfo
+from solana_dex_v1.transaction_processor import TransactionProcessor
 
 exclude_address_set = set()
 
@@ -25,21 +26,18 @@ async def parse_liqudity_data(data):
         if pool_state.baseMint in exclude_address_set:
             return
         poolOpenTime = pool_state.poolOpenTime
-        if run_timestamp - poolOpenTime < 0:
-            logger.info(f"未开盘 开盘时间 {poolOpenTime}")
-            # logger.info(f"查找到流动池 {pool_state}")
         if run_timestamp - poolOpenTime < 60:
             market_state = await get_market_state(pool_state.baseMint)
             if market_state:
                 exclude_address_set.add(pool_state.baseMint)
                 # await check_raydium_liquidity(pool_state.baseMint)
                 logger.info(
-                    f"检测到流动池变动 {data.result.value.pubkey} MINT地址 {pool_state.baseMint} 运行时间 {run_timestamp - poolOpenTime}")
-                logger.info(ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model()))
+                    f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配成功")
+                pool_info = ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model())
+                await TransactionProcessor.append_buy(pool_info)
             else:
-                logger.info(
-                    f"检测到流动池变动 {data.result.value.pubkey} MINT地址 {pool_state.baseMint} 运行时间 {run_timestamp - poolOpenTime} 市场情况 暂无")
-            # logger.info(f"查找到流动池 {pool_state}")
+                logger.warning(
+                    f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配失败")
     except Exception as e:
         logger.info(e)
 

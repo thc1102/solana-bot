@@ -1,4 +1,4 @@
-class Swap:
+class SwapCore:
     async def buy(self):
         pass
 
