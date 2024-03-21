@@ -35,7 +35,7 @@ async def parse_liqudity_data(data):
                 # await check_raydium_liquidity(pool_state.baseMint)
                 logger.info(
                     f"检测到流动池变动 {data.result.value.pubkey} MINT地址 {pool_state.baseMint} 运行时间 {run_timestamp - poolOpenTime}")
-                # logger.info(ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model()))
+                logger.info(ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model()))
             else:
                 logger.info(
                     f"检测到流动池变动 {data.result.value.pubkey} MINT地址 {pool_state.baseMint} 运行时间 {run_timestamp - poolOpenTime} 市场情况 暂无")
