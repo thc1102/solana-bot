@@ -13,9 +13,11 @@ from solana_dex_v1.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
 
 exclude_address_set = set()
 
+
 async def parse_liqudity_data(data):
     run_timestamp = time.time()
     try:
+        print(data.result.value.pubkey)
         pool_state = LIQUIDITY_STATE_LAYOUT_V4.parse(data.result.value.account.data)
         if pool_state.base_mint in exclude_address_set:
             return
@@ -30,6 +32,7 @@ async def parse_liqudity_data(data):
             logger.info(f"检测到流动池变动 {pool_state.base_mint} 运行时间 {run_timestamp - pool_open_time} s")
     except Exception as e:
         logger.info(e)
+
 
 async def run():
     logger.info("监听 Raydium 变化")

@@ -94,5 +94,6 @@ async def gen_pool(amm_id, ctx):
             return pool_keys
         except:
             {"error": "unexpected error occured"}
-    except:
+    except Exception as e:
+        print(e)
         return {"error": "incorrect pair address"}

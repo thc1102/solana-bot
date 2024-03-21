@@ -1,4 +1,4 @@
-import requests
+import httpx
 
 
 def download_file(url, filename, proxy=None):
@@ -6,7 +6,7 @@ def download_file(url, filename, proxy=None):
     proxies = {"http": proxy, "https": proxy} if proxy else None
 
     # 发送 GET 请求下载文件
-    response = requests.get(url, proxies=proxies)
+    response = httpx.get(url, proxies=proxy)
     print(response.text)
     # 检查响应状态码是否为 200 (成功)
     if response.status_code == 200:
