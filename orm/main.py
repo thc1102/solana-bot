@@ -19,16 +19,16 @@ async def init():
     # Generate the schema
     await Tortoise.generate_schemas()
 
-    with open(r"D:\Code\Python\solana-bot\liquidity_mainnet.json", encoding="utf-8") as f:
+    with open(r"D:\Code\solana-bot\liquidity_mainnet.json", encoding="utf-8") as f:
         data = json.loads(f.read())
     data_list = []
     data_list.extend(data.get("unOfficial"))
     data_list.extend(data.get("official"))
     print(len(data_list))
     # print(await RaydiumPoolHelper.get_all_primary_keys())
-    await RaydiumPoolHelper.bulk_create_pools(data_list)
+    # await RaydiumPoolHelper.bulk_create_pools(data_list)
 
-    print(await RaydiumPoolHelper.get_pool_by_mint("FTEB3iG1mJPfk8AwtzH555jftz5qT4AJtz24XHFH2Ekj"))
+    print(await RaydiumPoolHelper.get_pool_by_mint("24gG4br5xFBRmxdqpgirtxgcr7BaWoErQfc2uyDp2Qhh1"))
     # Close Tortoise ORM
     await Tortoise.close_connections()
 

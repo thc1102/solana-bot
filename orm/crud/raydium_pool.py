@@ -27,5 +27,10 @@ class RaydiumPoolHelper:
 
     @staticmethod
     async def get_pool_by_mint(base_mint):
-        pool = await RaydiumPool.get_or_none(baseMint=base_mint)
+        pool = await RaydiumPool.filter(baseMint=base_mint)
         return pool
+
+    @staticmethod
+    async def get_pool_count():
+        pool_count = await RaydiumPool.all().count()
+        return pool_count
