@@ -9,7 +9,7 @@ from asyncstdlib import enumerate
 
 from orm.crud.raydium import create_market_state
 from orm.models.raydium import MarketState
-from settings.config import Config
+from settings.config import AppConfig
 from solana_dex_v1.common.constants import OPENBOOK_MARKET, SOL_MINT_ADDRESS
 from solana_dex_v1.layout.serum_layout import MARKET_STATE_LAYOUT_V3
 
@@ -34,7 +34,7 @@ async def run():
     logger.info("监听 OpenBook 变化")
     while True:
         try:
-            async with connect(Config.RPC_WEBSOCKET_ENDPOINT, max_queue=None) as wss:
+            async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT, max_queue=None) as wss:
                 await wss.program_subscribe(
                     OPENBOOK_MARKET, Processed, "base64",
                     data_slice=DataSliceOpts(length=388, offset=0),

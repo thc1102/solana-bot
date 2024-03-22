@@ -10,7 +10,7 @@ from asyncstdlib import enumerate
 from solders.pubkey import Pubkey
 
 from orm.crud.raydium import get_market_state
-from settings.config import Config
+from settings.config import AppConfig
 from solana_dex_v1.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, SOL_MINT_ADDRESS
 from solana_dex_v1.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
 from solana_dex_v1.raydium.models import ApiPoolInfo
@@ -38,7 +38,7 @@ async def parse_liqudity_data(data):
                 logger.info(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配成功")
                 pool_info = ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model())
-                # await TransactionProcessor.append_buy(pool_info)
+                await TransactionProcessor.append_buy(pool_info)
             else:
                 logger.warning(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配失败")
@@ -50,7 +50,7 @@ async def run():
     logger.info("监听 Raydium 变化")
     while True:
         try:
-            async with connect(Config.RPC_WEBSOCKET_ENDPOINT, max_queue=None) as wss:
+            async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT, max_queue=None) as wss:
                 await wss.program_subscribe(
                     RAYDIUM_LIQUIDITY_POOL_V4, Confirmed, "base64",
                     data_slice=DataSliceOpts(length=752, offset=0),

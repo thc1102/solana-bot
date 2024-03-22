@@ -3,7 +3,6 @@ from solana.rpc.types import TokenAccountOpts
 from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 
-from raydium.layout import SPL_ACCOUNT_LAYOUT
 
 def convert_lamports_to_sol(lamports):
     # 假设代币用9个小数点表示
@@ -30,7 +29,7 @@ class RpcResponseError:
 
 if __name__ == '__main__':
     rpc_url = 'https://dimensional-frequent-wave.solana-mainnet.quiknode.pro/ab01b5056e35be398d8fa71f3d305c7848bf23fb'
-    wallet = Wallet("3Sn6Xoruw3sdYrPoorvW9pj3niJKNaHuwU6uV1vxMZASrbdGfDwnjBTcawzg5bCcRJTSes1yvb8NZquVVwakSFFb")
+    wallet = Wallet("2CpVUWrFP51Njq441oJAbe2dLcSPMhXkcc2Wu1GVfVQ5vaHp8c5SQ8mS4AXKdv4FTpQAyb7mnQW3zsR1ReZyX8s")
     # 创建Solana RPC客户端
     client = Client(rpc_url)
 

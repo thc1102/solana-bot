@@ -1,0 +1,4 @@
+class GlobalVariables:
+    SolaraClient = ""
+
+    DefaultWallet = ""

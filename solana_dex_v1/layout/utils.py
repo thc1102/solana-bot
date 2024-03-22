@@ -1,16 +1,7 @@
 import re
-
-from construct import (
-    Bit,
-    BitsSwapped,
-    BitStruct,
-    Bytes,
-    BytesInteger,
-    Int8ul,
-    Int64ul,
-    Padding, Adapter,
-)
 from solders.pubkey import Pubkey
+
+from construct import Bit, BitsSwapped, BitStruct, Bytes, BytesInteger, Int8ul, Int64ul, Padding, Adapter, Int32ul
 
 
 def convert_camel_case_to_snake_case(name: str) -> str:
@@ -27,6 +18,11 @@ def preprocess_key(key: str) -> str:
 def u8(key: str):
     key = preprocess_key(key)
     return key / Int8ul
+
+
+def u32(key: str):
+    key = preprocess_key(key)
+    return key / Int32ul
 
 
 def u64(key: str):

@@ -1,6 +1,4 @@
 from solders.pubkey import Pubkey
-from solders.token.associated import get_associated_token_address
-
 from solana_dex_v1.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, RAY_AUTHORITY_V4
 from solana_dex_v1.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
 
@@ -8,14 +6,14 @@ from solana_dex_v1.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
 class MinimalMarketState:
     def __init__(
             self,
-            event_queue: Pubkey,
-            bids: Pubkey,
-            asks: Pubkey,
+            event_queue: str,
+            bids: str,
+            asks: str,
             vault_signer_nonce: int
     ):
-        self.eventQueue = event_queue
-        self.bids = bids
-        self.asks = asks
+        self.eventQueue = Pubkey.from_string(event_queue)
+        self.bids = Pubkey.from_string(bids)
+        self.asks = Pubkey.from_string(asks)
         self.vaultSignerNonce = vault_signer_nonce
 
 

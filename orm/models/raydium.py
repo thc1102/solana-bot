@@ -53,4 +53,8 @@ class MarketState(Model):
         pass
 
     def to_model(self):
-        return MinimalMarketState(self.eventQueue, self.bids, self.asks, self.vaultSignerNonce)
+        return MinimalMarketState(
+            self.eventQueue,
+            self.bids,
+            self.asks,
+            self.vaultSignerNonce)
