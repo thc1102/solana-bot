@@ -32,9 +32,34 @@ class SwapCore:
         pass
 
 
+class TokenOwnerOffCurveError(Exception):
+    pass
+
+
+def get_associated_token_address_sync(
+        mint: Pubkey,
+        owner: Pubkey,
+        allow_owner_off_curve=False,
+        program_id=Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+        associated_token_program_id=Pubkey.from_string("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+) -> Pubkey:
+    if not allow_owner_off_curve and not owner.is_on_curve():
+        raise TokenOwnerOffCurveError()
+
+    address = Pubkey.find_program_address(
+        [bytes(owner), bytes(program_id), bytes(mint)],
+        associated_token_program_id
+    )[0]
+
+    return address
+
+
 if __name__ == '__main__':
     print(get_associated_token_address(Pubkey.from_string("3JogsSZpzaYRLocVAMMUHwRSwiRh4x6pVfe42fJNG8Ms"),
                                        Pubkey.from_string("7DP9nHNDK43KbGcFKzLD5G3mYwwhVDgjenFnXM8JcDxn")))
 
     print(get_associated_token_address(Pubkey.from_string("7DP9nHNDK43KbGcFKzLD5G3mYwwhVDgjenFnXM8JcDxn"),
                                        Pubkey.from_string("3JogsSZpzaYRLocVAMMUHwRSwiRh4x6pVfe42fJNG8Ms")))
+
+    print(get_associated_token_address_sync(Pubkey.from_string("3JogsSZpzaYRLocVAMMUHwRSwiRh4x6pVfe42fJNG8Ms"),
+                                            Pubkey.from_string("7DP9nHNDK43KbGcFKzLD5G3mYwwhVDgjenFnXM8JcDxn")))
