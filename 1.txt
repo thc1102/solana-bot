@@ -1,26 +1,162 @@
-  id: APKDfaHxdx4LbRigoYbQxqTtm2fmr7HaXTSCriS2733d
-  baseMint: 6ikGxSJknLnnN9294V1vBVqSnCf62cSAhYq6BKxyir1K
-  quoteMint: So11111111111111111111111111111111111111112
-  lpMint: 28fwkLTbDQ8Grctsp3KsPipAfamYcXM7DesZxNA6dna1
-  baseDecimals: 9
-  quoteDecimals: 9
-  lpDecimals: 5
-  version: 4
-  programId: 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8
-  authority: 5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1
-  openOrders: 5DPBELchJcJVyLDQnCmStY8bCUyzgC3JKYBVqGaKaf6u
-  targetOrders: HWPDTpgWyEAFZNqB6tTnPFvuaAB3Zo2TokpgKZ8pSB7z
-  baseVault: 4UJQrf3ZGsCXFyChZCUSZboKhd2QEkCw9Bu9bbfj3LL9
-  quoteVault: Ehx2HaP46AFK1YsMCNtZKbPnCQXYqH5SJQpjTvRN33x1
-  withdrawQueue: 11111111111111111111111111111111
-  lpVault: 11111111111111111111111111111111
-  marketVersion: 3
-  marketProgramId: srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX
-  marketId: 3vvyYRCDYM6gk3jKkgumLqFA4wUecwTnXZuE3rfVuxLF
-  marketAuthority: 3iwU8ZTcBwtoL4WCkf7SzRqk3CBwc2gw9XhCapdn6DU6
-  marketBaseVault: 4UJQrf3ZGsCXFyChZCUSZboKhd2QEkCw9Bu9bbfj3LL9
-  marketQuoteVault: Ehx2HaP46AFK1YsMCNtZKbPnCQXYqH5SJQpjTvRN33x1
-  marketBids: HEVCiHqRY7zD1XKSsD9JqPzYdNRHGCiqXYYYj2X7Pdy8
-  marketAsks: DTqSdWkNrggmfddJxNuYPZqaxhzD89H163n6W734pyTw
-  marketEventQueue: DtcMQxayPk5iLAzc2y7yR9WUtcnf85SrXzHJFjLBEBoM
-  lookupTableAccount: 11111111111111111111111111111111
+{
+  poolKeys: {
+    id: PublicKey [PublicKey(43AUgvyh532KeEwcAJgrHo8QVJ7FEzkwdmxePKx8D5Tu)] {
+      _bn: <BN: 2d20f0426536d8b27db8f88014a7810bb096041430121ca3a9bb57f26ce5d7d8>
+    },
+    baseMint: PublicKey [PublicKey(7DP9nHNDK43KbGcFKzLD5G3mYwwhVDgjenFnXM8JcDxn)] {
+      _bn: <BN: 5c52234f17fdc8d6e69f77967541fd253dad1689dc0063c42fffb2ce8d50603b>
+    },
+    quoteMint: PublicKey [PublicKey(So11111111111111111111111111111111111111112)] {
+      _bn: <BN: 69b8857feab8184fb687f634618c035dac439dc1aeb3b5598a0f00000000001>
+    },
+    lpMint: PublicKey [PublicKey(HYgxs8rnqejBvKLeUfePZaNPyS35efHKqiw7HEEPvtus)] {
+      _bn: <BN: f5d92eb2ae7e82a8420d6daff07ca5a4e5137bf88a0134c65966c777e2610c2e>
+    },
+    baseDecimals: 9,
+    quoteDecimals: 9,
+    lpDecimals: 5,
+    version: 4,
+    programId: PublicKey [PublicKey(675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8)] {
+      _bn: <BN: 4bd949c43602c33f207790ed16a3524ca1b9975cf121a2a90cffec7df8b68acd>
+    },
+    authority: PublicKey [PublicKey(5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1)] {
+      _bn: <BN: 4157b0580f31c5fce44a62582dbcf9d78ee75943a084a393b350368d22899308>
+    },
+    openOrders: PublicKey [PublicKey(BXtPSaGfeGdnTRzeLurojqDyU7V2eFKB3BgoQnSMEZfy)] {
+      _bn: <BN: 9c7e659b6ecafcc30a78b8698501423acd9edfa347bb91cd48899766c88d49fc>
+    },
+    targetOrders: PublicKey [PublicKey(GKhZfaKFUPvF27uvyG85JG9MJsErVvLpLZETgbP8meS7)] {
+      _bn: <BN: e3a99f97763e708971a11b574df6b103d51d50756e7310c5219e0af514c563f4>
+    },
+    baseVault: PublicKey [PublicKey(3p8mvs7xwREsfh3KT8uCkua35UYXEPRLcLfa65wvxoRG)] {
+      _bn: <BN: 29ca76727b7d70389a5dcecde7a34965b33ed7e88a82e2750dbfd011d572e31f>
+    },
+    quoteVault: PublicKey [PublicKey(EaYqs6wRT3cLYNmWJB3qe8t8rVjRiFdRWZt6MaKAfwDT)] {
+      _bn: <BN: c9c019e4e458a77077d9113794eefe0b86813eb50a5509fd33441428d0eb806a>
+    },
+    marketVersion: 3,
+    marketProgramId: PublicKey [PublicKey(srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX)] {
+      _bn: <BN: d0751a8282da61305fe299c37b998e58471db1135037310f8be1045a60af6ee>
+    },
+    marketId: PublicKey [PublicKey(EvyE38synZwVbb7uS34EdcokU4GnnerysXbftkbnQLKn)] {
+      _bn: <BN: cefb49568c9ec6e0fa44c24c16dfe7cc8e8bbedd5791f446f45d1cb8af3068d5>
+    },
+    marketAuthority: PublicKey [PublicKey(Gt64YrSy4AWhzo57z6cAgXZ7y4iGPybXGrHCNV1dfx72)] {
+      _bn: <BN: ebf5a5da9d5a68e45d0e4f98111b57ece437b62f02013aea8dc6284163c9dec9>
+    },
+    marketBaseVault: PublicKey [PublicKey(3p8mvs7xwREsfh3KT8uCkua35UYXEPRLcLfa65wvxoRG)] {
+      _bn: <BN: 29ca76727b7d70389a5dcecde7a34965b33ed7e88a82e2750dbfd011d572e31f>
+    },
+    marketQuoteVault: PublicKey [PublicKey(EaYqs6wRT3cLYNmWJB3qe8t8rVjRiFdRWZt6MaKAfwDT)] {
+      _bn: <BN: c9c019e4e458a77077d9113794eefe0b86813eb50a5509fd33441428d0eb806a>
+    },
+    marketBids: PublicKey [PublicKey(2KVFvx3Wr1PdDKfrrXSREBJjE5QMTazvDo2oCKewSJJP)] {
+      _bn: <BN: 1398179dd9fb3965d7a6cc515b422c61f090624e51afc3ec54e114921c6f86bc>
+    },
+    marketAsks: PublicKey [PublicKey(C25HkUXcF54pd134YW734z9i16tXNi1LxFQwbE3qGf6d)] {
+      _bn: <BN: a3b6fc810e624aeac045c7c162fad53b319f9b359629f3f0ea8e1a052e647d76>
+    },
+    marketEventQueue: PublicKey [PublicKey(BAAAeMn5XbRHeNgzW6mu4HqpgSPwUpGVqU6GCUMdhEgS)] {
+      _bn: <BN: 96ed75fcc91b16c0d5cbf00735b5c768ddace39fceb093a332a3d2b87a82aa03>
+    },
+    withdrawQueue: PublicKey [PublicKey(11111111111111111111111111111111)] {
+      _bn: <BN: 0>
+    },
+    lpVault: PublicKey [PublicKey(11111111111111111111111111111111)] {
+      _bn: <BN: 0>
+    },
+    lookupTableAccount: PublicKey [PublicKey(11111111111111111111111111111111)] {
+      _bn: <BN: 0>
+    }
+  },
+  userKeys: {
+    tokenAccountIn: PublicKey [PublicKey(FLbtQ1kLTVRuvn5fifUfT1vVyUgiXa3maLAzJKobX3w)] {
+      _bn: <BN: 3ac4b77d48526a8ddbd3bfbd0fd6cc07d714d8fbbe56ae0a43a01a02b789e12>
+    },
+    tokenAccountOut: PublicKey [PublicKey(61nyFaa6qxy4WQ3XG6GbgAnssHHw7Ao29ACduVvGwNG3)] {
+      _bn: <BN: 4a7e69b456e308d94bba2fd3730e741f1b267d2406a7203b0a927817ecb1e0dc>
+    },
+    owner: PublicKey [PublicKey(3JogsSZpzaYRLocVAMMUHwRSwiRh4x6pVfe42fJNG8Ms)] {
+      _bn: <BN: 22470987bf6da938041e3644c0cc3229de1d566251f5bd8cb08aede313ffaffe>
+    }
+  },
+  amountIn: <BN: 5f5e100>,
+  minAmountOut: 0
+} 4 {
+  status: <BN: 6>,
+  nonce: <BN: fe>,
+  maxOrder: <BN: 7>,
+  depth: <BN: 3>,
+  baseDecimal: <BN: 9>,
+  quoteDecimal: <BN: 9>,
+  state: <BN: 1>,
+  resetFlag: <BN: 0>,
+  minSize: <BN: f4240>,
+  volMaxCutRatio: <BN: 1f4>,
+  amountWaveRatio: <BN: 4c4b40>,
+  baseLotSize: <BN: f4240>,
+  quoteLotSize: <BN: f4240>,
+  minPriceMultiplier: <BN: 1>,
+  maxPriceMultiplier: <BN: 3b9aca00>,
+  systemDecimalValue: <BN: 3b9aca00>,
+  minSeparateNumerator: <BN: 5>,
+  minSeparateDenominator: <BN: 2710>,
+  tradeFeeNumerator: <BN: 19>,
+  tradeFeeDenominator: <BN: 2710>,
+  pnlNumerator: <BN: c>,
+  pnlDenominator: <BN: 64>,
+  swapFeeNumerator: <BN: 19>,
+  swapFeeDenominator: <BN: 2710>,
+  baseNeedTakePnl: <BN: 0>,
+  quoteNeedTakePnl: <BN: 0>,
+  quoteTotalPnl: <BN: 0>,
+  baseTotalPnl: <BN: 0>,
+  poolOpenTime: <BN: 65fd1528>,
+  punishPcAmount: <BN: 0>,
+  punishCoinAmount: <BN: 0>,
+  orderbookToInitTime: <BN: 0>,
+  swapBaseInAmount: <BN: 0>,
+  swapQuoteOutAmount: <BN: 0>,
+  swapBase2QuoteFee: <BN: 1efe920>,
+  swapQuoteInAmount: <BN: 306dc4200>,
+  swapBaseOutAmount: <BN: 8306c2996b38579>,
+  swapQuote2BaseFee: <BN: 0>,
+  baseVault: PublicKey [PublicKey(3p8mvs7xwREsfh3KT8uCkua35UYXEPRLcLfa65wvxoRG)] {
+    _bn: <BN: 29ca76727b7d70389a5dcecde7a34965b33ed7e88a82e2750dbfd011d572e31f>
+  },
+  quoteVault: PublicKey [PublicKey(EaYqs6wRT3cLYNmWJB3qe8t8rVjRiFdRWZt6MaKAfwDT)] {
+    _bn: <BN: c9c019e4e458a77077d9113794eefe0b86813eb50a5509fd33441428d0eb806a>
+  },
+  baseMint: PublicKey [PublicKey(7DP9nHNDK43KbGcFKzLD5G3mYwwhVDgjenFnXM8JcDxn)] {
+    _bn: <BN: 5c52234f17fdc8d6e69f77967541fd253dad1689dc0063c42fffb2ce8d50603b>
+  },
+  quoteMint: PublicKey [PublicKey(So11111111111111111111111111111111111111112)] {
+    _bn: <BN: 69b8857feab8184fb687f634618c035dac439dc1aeb3b5598a0f00000000001>
+  },
+  lpMint: PublicKey [PublicKey(HYgxs8rnqejBvKLeUfePZaNPyS35efHKqiw7HEEPvtus)] {
+    _bn: <BN: f5d92eb2ae7e82a8420d6daff07ca5a4e5137bf88a0134c65966c777e2610c2e>
+  },
+  openOrders: PublicKey [PublicKey(BXtPSaGfeGdnTRzeLurojqDyU7V2eFKB3BgoQnSMEZfy)] {
+    _bn: <BN: 9c7e659b6ecafcc30a78b8698501423acd9edfa347bb91cd48899766c88d49fc>
+  },
+  marketId: PublicKey [PublicKey(EvyE38synZwVbb7uS34EdcokU4GnnerysXbftkbnQLKn)] {
+    _bn: <BN: cefb49568c9ec6e0fa44c24c16dfe7cc8e8bbedd5791f446f45d1cb8af3068d5>
+  },
+  marketProgramId: PublicKey [PublicKey(srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX)] {
+    _bn: <BN: d0751a8282da61305fe299c37b998e58471db1135037310f8be1045a60af6ee>
+  },
+  targetOrders: PublicKey [PublicKey(GKhZfaKFUPvF27uvyG85JG9MJsErVvLpLZETgbP8meS7)] {
+    _bn: <BN: e3a99f97763e708971a11b574df6b103d51d50756e7310c5219e0af514c563f4>
+  },
+  withdrawQueue: PublicKey [PublicKey(11111111111111111111111111111111)] {
+    _bn: <BN: 0>
+  },
+  lpVault: PublicKey [PublicKey(11111111111111111111111111111111)] {
+    _bn: <BN: 0>
+  },
+  owner: PublicKey [PublicKey(GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ)] {
+    _bn: <BN: e5b62b65cb3bbda6f56888e66fee8e64dc5560199c0f88b11fe273bd059e8aa1>
+  },
+  lpReserve: <BN: 5648411934fb>,
+  padding: [ <BN: 0>, <BN: 0>, <BN: 0> ]
+}
