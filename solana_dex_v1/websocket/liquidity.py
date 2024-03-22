@@ -19,6 +19,10 @@ from solana_dex_v1.transaction_processor import TransactionProcessor
 exclude_address_set = set()
 
 
+def check_raydium_liquidity():
+    pass
+
+
 async def parse_liqudity_data(data):
     run_timestamp = time.time()
     try:
@@ -30,11 +34,11 @@ async def parse_liqudity_data(data):
             market_state = await get_market_state(pool_state.baseMint)
             if market_state:
                 exclude_address_set.add(pool_state.baseMint)
-                # await check_raydium_liquidity(pool_state.baseMint)
+                # check_raydium_liquidity(pool_state.baseMint)
                 logger.info(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配成功")
                 pool_info = ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model())
-                await TransactionProcessor.append_buy(pool_info)
+                # await TransactionProcessor.append_buy(pool_info)
             else:
                 logger.warning(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配失败")

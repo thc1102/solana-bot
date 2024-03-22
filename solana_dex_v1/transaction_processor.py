@@ -1,5 +1,7 @@
 import asyncio
 
+from solders.pubkey import Pubkey
+
 from solana_dex_v1.raydium.models import ApiPoolInfo
 from solana_dex_v1.raydium.swap_core import SwapCore
 
@@ -10,7 +12,7 @@ class TransactionProcessor:
     """
 
     @staticmethod
-    async def append_buy(api_pool_info: ApiPoolInfo):
+    async def append_buy(mint: Pubkey, api_pool_info: ApiPoolInfo):
         asyncio.create_task(SwapCore().buy())
 
     @staticmethod

@@ -2,6 +2,7 @@ import asyncio
 
 from loguru import logger
 from solders.pubkey import Pubkey
+from spl.token.instructions import get_associated_token_address
 from tortoise import Tortoise
 
 from settings.config import Config
@@ -32,7 +33,7 @@ async def init_db():
     # print(await RaydiumPoolHelper.get_pool_by_mint("24gG4br5xFBRmxdqpgirtxgcr7BaWoErQfc2uyDp2Qhh1"))
     # Close Tortoise ORM
     # await Tortoise.close_connections()
-
+get_associated_token_address
 
 async def init_wallet():
     wallet = Wallet(Config.PRIVATE_KEY)
