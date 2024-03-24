@@ -48,7 +48,7 @@ class TransactionProcessor:
                 return
             wallet = GlobalVariables.default_wallet
             swap = SwapCore(wallet, api_pool_info, AppConfig.MICROLAMPORTS)
-            buy = await send_with_retry(lambda: swap.buy(api_pool_info.baseMint, 0.01),
+            buy = await send_with_retry(lambda: swap.buy(api_pool_info.baseMint, AppConfig.AUTO_QUOTE_AMOUNT),
                                         max_attempts=AppConfig.MAX_BUY_RETRIES)
             # 购买完成后去重
             exclude_buy_set.discard(api_pool_info.baseMint)

@@ -1,4 +1,5 @@
 import solders.system_program as sp
+import spl.token.instructions as spl_token
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TokenAccountOpts
 from solders.compute_budget import set_compute_unit_price, set_compute_unit_limit
@@ -8,11 +9,10 @@ from solders.message import MessageV0
 from solders.pubkey import Pubkey
 from solders.token.associated import get_associated_token_address
 from solders.transaction import VersionedTransaction
-from spl.memo import instructions
 from spl.token.async_client import AsyncToken
 from spl.token.constants import TOKEN_PROGRAM_ID
 from spl.token.instructions import close_account, CloseAccountParams, create_associated_token_account
-import spl.token.instructions as spl_token
+
 from solana_dex.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, OPENBOOK_MARKET, SOL_MINT_ADDRESS
 from solana_dex.layout.raydium_layout import ROUTE_DATA_LAYOUT
 from solana_dex.raydium.models import ApiPoolInfo
@@ -72,7 +72,7 @@ class SwapTransactionBuilder:
         self.baseMint = pool.baseMint
         self.TOKEN_PROGRAM_ID = TOKEN_PROGRAM_ID
         # quote address (supposed to be SOL)
-        self.quoteMint = pool.marketQuoteVault
+        self.quoteMint = pool.quoteMint
         # budget
         self.unit_price = unit_price
         self.unit_budget = unit_budget
@@ -80,13 +80,12 @@ class SwapTransactionBuilder:
         self.instructions = []
 
     async def compile_versioned_transaction(self):
-        recent_blockhash = await self.client.get_latest_blockhash()
-
+        recent_blockhash = (await self.client.get_latest_blockhash()).value
         compiled_message = MessageV0.try_compile(
             self.payer.pubkey(),
             self.instructions,
             [],  # lookup tables
-            recent_blockhash,
+            recent_blockhash.blockhash,
         )
         return VersionedTransaction(compiled_message, [self.payer])
 
@@ -103,18 +102,15 @@ class SwapTransactionBuilder:
             )
         )
 
-    def append_sell(self, amount_in: int):
+    async def append_sell(self, amount_in: int, check_associated_token_account_exists=True):
         self.append_set_compute_budget(self.unit_price, self.unit_budget)
-        # pay target token (TOKEN)
         source = get_associated_token_address(self.payer.pubkey(), self.baseMint)
-        # get quote token (SOL)
         dest = get_associated_token_address(self.payer.pubkey(), self.quoteMint)
-        # this would opens the destination token account
-        self.append_create_associated_token_account(self.quoteMint)
-        # swap
+        if check_associated_token_account_exists:
+            await self.append_if_not_exists_create_associated_token_account(self.quoteMint)
         self.append_swap(amount_in, source, dest)
-        # close the account
         self.append_close_account(dest)
+        print(self.instructions)
 
     async def append_buy(
             self,
@@ -127,8 +123,7 @@ class SwapTransactionBuilder:
         source = self.append_create_account_with_seed(lamports)
         self.append_initialize_account(source)
         if check_associated_token_account_exists:
-            self.append_if_not_exists_create_associated_token_account(self.baseMint)
-        # swap
+            await self.append_if_not_exists_create_associated_token_account(self.baseMint)
         dest = get_associated_token_address(self.payer.pubkey(), self.baseMint)
         self.append_swap(amount_in, source, dest)
         self.append_close_account(source)
@@ -190,8 +185,8 @@ class SwapTransactionBuilder:
             )
         )
 
-    def append_if_not_exists_create_associated_token_account(self, mint: Pubkey):
-        arr = self.client.get_token_accounts_by_owner(self.payer.pubkey(), TokenAccountOpts(mint)).value
+    async def append_if_not_exists_create_associated_token_account(self, mint: Pubkey):
+        arr = (await self.client.get_token_accounts_by_owner(self.payer.pubkey(), TokenAccountOpts(mint))).value
 
         if len(arr) > 0:
             return

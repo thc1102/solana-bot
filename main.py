@@ -25,13 +25,8 @@ async def init_db():
 async def init_wallet():
     wallet = Wallet(AppConfig.PRIVATE_KEY)
     await wallet.update_token_accounts()
-    wsol_token = wallet.get_token_accounts(SOL_MINT_ADDRESS)
-    if wsol_token is None:
-        logger.info("wSOl账户不存在无法使用")
-        GlobalVariables.stop_event.set()
-        return
     sol_balance = await wallet.get_sol_balance()
-    logger.info(f"当前账户地址 {wallet.pubkey} SOL余额 {sol_balance} wSOL余额 {wsol_token.uiAmount}")
+    logger.info(f"当前账户地址 {wallet.pubkey} SOL余额 {sol_balance}")
     GlobalVariables.default_wallet = wallet
 
 
