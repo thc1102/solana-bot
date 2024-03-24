@@ -110,7 +110,6 @@ class SwapTransactionBuilder:
             await self.append_if_not_exists_create_associated_token_account(self.quoteMint)
         self.append_swap(amount_in, source, dest)
         self.append_close_account(dest)
-        print(self.instructions)
 
     async def append_buy(
             self,
@@ -186,10 +185,10 @@ class SwapTransactionBuilder:
         )
 
     async def append_if_not_exists_create_associated_token_account(self, mint: Pubkey):
-        arr = (await self.client.get_token_accounts_by_owner(self.payer.pubkey(), TokenAccountOpts(mint))).value
-
-        if len(arr) > 0:
-            return
+        # arr = (await self.client.get_token_accounts_by_owner(self.payer.pubkey(), TokenAccountOpts(mint))).value
+        #
+        # if len(arr) > 0:
+        #     return
 
         self.instructions.append(
             create_associated_token_account(
