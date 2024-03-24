@@ -1,1 +1,4 @@
-As.get_token_accounts_by_owner(payer.pubkey(), TokenAccountOpts(sol))
+from solders.keypair import Keypair
+
+new_keypair = Keypair()
+print(new_keypair)

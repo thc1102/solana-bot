@@ -9,6 +9,7 @@ from solders.message import MessageV0
 from solders.pubkey import Pubkey
 from solders.token.associated import get_associated_token_address
 from solders.transaction import VersionedTransaction
+from spl.token._layouts import ACCOUNT_LAYOUT
 from spl.token.async_client import AsyncToken
 from spl.token.constants import TOKEN_PROGRAM_ID
 from spl.token.instructions import close_account, CloseAccountParams, create_associated_token_account
@@ -78,6 +79,7 @@ class SwapTransactionBuilder:
         self.unit_budget = unit_budget
         # initialize instructions
         self.instructions = []
+        self.new_keypair = None
 
     async def compile_versioned_transaction(self):
         recent_blockhash = (await self.client.get_latest_blockhash()).value
@@ -87,7 +89,10 @@ class SwapTransactionBuilder:
             [],  # lookup tables
             recent_blockhash.blockhash,
         )
-        return VersionedTransaction(compiled_message, [self.payer])
+        keypairs = [self.payer]
+        if self.new_keypair is not None:
+            keypairs.append(self.new_keypair)
+        return VersionedTransaction(compiled_message, keypairs)
 
     def append_swap(
             self, amount_in: int, source: Pubkey, dest: Pubkey
@@ -103,13 +108,14 @@ class SwapTransactionBuilder:
         )
 
     async def append_sell(self, amount_in: int, check_associated_token_account_exists=True):
+        pay_for_rent = await AsyncToken.get_min_balance_rent_for_exempt_for_account(self.client)
         self.append_set_compute_budget(self.unit_price, self.unit_budget)
         source = get_associated_token_address(self.payer.pubkey(), self.baseMint)
-        dest = get_associated_token_address(self.payer.pubkey(), self.quoteMint)
+        dest = self.append_create_account(pay_for_rent)
         if check_associated_token_account_exists:
             await self.append_if_not_exists_create_associated_token_account(self.quoteMint)
-        self.append_swap(amount_in, source, dest)
-        self.append_close_account(dest)
+        self.append_swap(amount_in, source, dest.pubkey())
+        self.append_close_account(dest.pubkey())
 
     async def append_buy(
             self,
@@ -117,15 +123,14 @@ class SwapTransactionBuilder:
             check_associated_token_account_exists=True,
     ):
         pay_for_rent = await AsyncToken.get_min_balance_rent_for_exempt_for_account(self.client)
-        lamports = pay_for_rent + amount_in
         self.append_set_compute_budget(self.unit_price, self.unit_budget)
-        source = self.append_create_account_with_seed(lamports)
-        self.append_initialize_account(source)
+        source = self.append_create_account(pay_for_rent, amount_in)
+        self.append_initialize_account(source.pubkey())
         if check_associated_token_account_exists:
             await self.append_if_not_exists_create_associated_token_account(self.baseMint)
         dest = get_associated_token_address(self.payer.pubkey(), self.baseMint)
-        self.append_swap(amount_in, source, dest)
-        self.append_close_account(source)
+        self.append_swap(amount_in, source.pubkey(), dest)
+        self.append_close_account(source.pubkey())
 
     def append_set_compute_budget(self, unit_price: int, unit_limit: int):
         self.instructions.append(set_compute_unit_price(unit_price))
@@ -150,26 +155,31 @@ class SwapTransactionBuilder:
             )
         )
 
-    def append_create_account_with_seed(self, lamports: int):
-        # create account with seed
-        seed = str(Keypair().pubkey())[0:32]  # use this as the seed for the new account
-        source = Pubkey.create_with_seed(
-            self.payer.pubkey(), seed, self.TOKEN_PROGRAM_ID
-        )
+    def append_create_account(self, lamports: int, amount: int == 0):
+        new_keypair = Keypair()
         self.instructions.append(
-            sp.create_account_with_seed(
-                sp.CreateAccountWithSeedParams(
+            sp.create_account(
+                sp.CreateAccountParams(
                     from_pubkey=self.payer.pubkey(),
-                    to_pubkey=source,
-                    base=self.payer.pubkey(),
-                    seed=seed,
+                    to_pubkey=new_keypair.pubkey(),
                     lamports=lamports,
-                    space=165,
+                    space=ACCOUNT_LAYOUT.sizeof(),
                     owner=self.TOKEN_PROGRAM_ID,
                 )
             )
         )
-        return source
+        if amount == 0:
+            self.instructions.append(
+                sp.transfer(
+                    sp.TransferParams(
+                        from_pubkey=self.payer.pubkey(),
+                        to_pubkey=new_keypair.pubkey(),
+                        lamports=amount,
+                    )
+                )
+            )
+        self.new_keypair = new_keypair
+        return new_keypair
 
     def append_initialize_account(self, source: Pubkey):
         # initialize account
