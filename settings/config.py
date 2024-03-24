@@ -11,6 +11,7 @@ class Config(BaseSettings):
     MICROLAMPORTS: int = 250000
     AUTO_TRADING: bool = False
     AUTO_QUOTE_AMOUNT: float = 0.01
+    AUTO_SELL_STATUS: bool = False
     CHECK_IF_MINT_IS_RENOUNCED: bool = False
     POOL_SIZE: int = 1000
     AUTO_SELL_TIME: int = 60

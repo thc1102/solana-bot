@@ -34,7 +34,7 @@ class SwapCore:
         :return:
         """
         swap_transaction_builder = SwapTransactionBuilder(GlobalVariables.SolaraClient, self.pool_info,
-                                                          self.wallet.keypair, unit_price=AppConfig.MICROLAMPORTS)
+                                                          self.wallet.keypair, unit_price=self.compute_unit_price)
 
         await swap_transaction_builder.append_buy(amount_in,
                                                   not self.wallet.check_token_accounts(token_mint))
@@ -54,7 +54,7 @@ class SwapCore:
         :return:
         """
         swap_transaction_builder = SwapTransactionBuilder(GlobalVariables.SolaraClient, self.pool_info,
-                                                          self.wallet.keypair, unit_price=AppConfig.MICROLAMPORTS)
+                                                          self.wallet.keypair, unit_price=self.compute_unit_price)
 
         await swap_transaction_builder.append_sell(amount_in, not self.wallet.check_token_accounts(SOL_MINT_ADDRESS))
         transaction = await swap_transaction_builder.compile_versioned_transaction()

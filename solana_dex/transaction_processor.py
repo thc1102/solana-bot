@@ -39,9 +39,11 @@ class TransactionProcessor:
                     return
             # 避免重复购买
             exclude_buy_set.add(api_pool_info.baseMint)
+            # 测试方法仅购买一次
             global test_num
             if test_num:
                 return
+            # 检测是否狙击模式
             if AppConfig.USE_SNIPE_LIST:
                 pass
             if not AppConfig.AUTO_TRADING:
@@ -55,6 +57,8 @@ class TransactionProcessor:
             if not buy:
                 return False
             test_num = True
+            if not AppConfig.AUTO_SELL_STATUS:
+                return
             # 等待售出
             await asyncio.sleep(AppConfig.AUTO_SELL_TIME)
             # 创建售出任务
