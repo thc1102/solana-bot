@@ -47,7 +47,7 @@ async def run():
     swap = SwapCore(wallet, pool_info)
 
     puy = await swap.buy(Pubkey.from_string("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82"), 0.01)
-    await asyncio.sleep(15)
+    await asyncio.sleep(30)
     if puy:
         await swap.sell(Pubkey.from_string("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82"))
 
