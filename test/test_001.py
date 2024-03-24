@@ -31,7 +31,7 @@ async def run():
     #     print(pool.get_price(10.0, Direction.SPEND_BASE_TOKEN))
     #     print(time.time() - t)
     # print("完成")
-    pool = RaydiumPool(client, "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA")
+    pool = RaydiumPool(client, "AgFnRLUScRD2E4nWQxW73hdbSN7eKEUb2jHX7tx9YTYc")
     await pool.initialization_task
     swap = Swap(client, pool)
     print(pool.get_price(10.0, Direction.SPEND_BASE_TOKEN))

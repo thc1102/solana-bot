@@ -1,5 +1,6 @@
 from typing import Optional
 
+from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 from solana.rpc.commitment import Commitment
 from solana.rpc.types import TokenAccountOpts
@@ -92,7 +93,7 @@ class SolanaRPCClient:
     async def confirm_transaction(
             txn_signature: Signature,
             commitment: Optional[Commitment] = None,
-            sleep_seconds: float = 30,
+            sleep_seconds: float = 1,
     ):
         """
         异步函数：确认交易

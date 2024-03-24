@@ -10,7 +10,7 @@ RPC_HTTPS_URL = "https://dimensional-frequent-wave.solana-mainnet.quiknode.pro/a
 
 
 async def test():
-    amm_id = "DSUvc5qf5LJHHV5e2tD184ixotSnCnwj7i4jJa4Xsrmt"  # test
+    amm_id = "4LgskeiWMRjoZ32uAE5heMiHLfUXc38a7gnyjs1NWyuB"  # test
     #
     ctx = AsyncClient(RPC_HTTPS_URL, commitment=Confirmed)
     #

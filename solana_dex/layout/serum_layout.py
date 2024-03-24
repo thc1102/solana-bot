@@ -3,8 +3,8 @@ from construct import Struct
 from solana_dex.layout.utils import WideBitsBuilder, blob, preprocess_key, publicKey, u64
 
 
-def accountFlagsLayout(property="accountFlags"):
-    builder = WideBitsBuilder(preprocess_key(property))
+def account_flags_layout(_property="accountFlags"):
+    builder = WideBitsBuilder(preprocess_key(_property))
     builder.add_boolean("initialized")
     builder.add_boolean("market")
     builder.add_boolean("openOrders")
@@ -12,12 +12,12 @@ def accountFlagsLayout(property="accountFlags"):
     builder.add_boolean("eventQueue")
     builder.add_boolean("bids")
     builder.add_boolean("asks")
-    return preprocess_key(property) / builder.get_layout()
+    return preprocess_key(_property) / builder.get_layout()
 
 
-MARKET_STATE_LAYOUT_V2 = Struct(
+MARKET_STATE_LAYOUT_V3 = Struct(
     blob("none", 5),
-    accountFlagsLayout("accountFlags"),
+    account_flags_layout("accountFlags"),
     publicKey("ownAddress"),
     u64("vaultSignerNonce"),
     publicKey("baseMint"),

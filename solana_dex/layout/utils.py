@@ -1,15 +1,7 @@
 import re
+from solders.pubkey import Pubkey
 
-from construct import (
-    Bit,
-    BitsSwapped,
-    BitStruct,
-    Bytes,
-    BytesInteger,
-    Int8ul,
-    Int64ul,
-    Padding,
-)
+from construct import Bit, BitsSwapped, BitStruct, Bytes, BytesInteger, Int8ul, Int64ul, Padding, Adapter, Int32ul
 
 
 def convert_camel_case_to_snake_case(name: str) -> str:
@@ -18,12 +10,19 @@ def convert_camel_case_to_snake_case(name: str) -> str:
 
 
 def preprocess_key(key: str) -> str:
-    return convert_camel_case_to_snake_case(key)
+    # 不进行驼峰转换
+    # convert_camel_case_to_snake_case(key)
+    return key
 
 
 def u8(key: str):
     key = preprocess_key(key)
     return key / Int8ul
+
+
+def u32(key: str):
+    key = preprocess_key(key)
+    return key / Int32ul
 
 
 def u64(key: str):
@@ -39,7 +38,7 @@ def u128(key: str):
 
 def publicKey(key: str):
     key = preprocess_key(key)
-    return key / Bytes(32)
+    return key / PublicKeyAdapter(Bytes(32))
 
 
 def pad(key: str, length: int):
@@ -50,6 +49,16 @@ def pad(key: str, length: int):
 def blob(key: str, length: int):
     key = preprocess_key(key)
     return key / Bytes(length)
+
+
+class PublicKeyAdapter(Adapter):
+    def _decode(self, obj, context, path):
+        # 将字节序列转换为PublicKey对象
+        return Pubkey(obj)
+
+    def _encode(self, obj, context, path):
+        # 将PublicKey对象转换为字节序列
+        return bytes(obj)
 
 
 class WideBitsBuilder:

@@ -1,6 +1,6 @@
 from solders.pubkey import Pubkey
-from solana_dex_v1.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, RAY_AUTHORITY_V4
-from solana_dex_v1.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
+from solana_dex.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, RAY_AUTHORITY_V4
+from solana_dex.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
 
 
 class MinimalMarketState:
@@ -9,12 +9,17 @@ class MinimalMarketState:
             event_queue: str,
             bids: str,
             asks: str,
-            vault_signer_nonce: int
+            vault_signer_nonce: int,
+            base_vault: str,
+            quote_vault: str
+
     ):
         self.eventQueue = Pubkey.from_string(event_queue)
         self.bids = Pubkey.from_string(bids)
         self.asks = Pubkey.from_string(asks)
         self.vaultSignerNonce = vault_signer_nonce
+        self.baseVault = Pubkey.from_string(base_vault)
+        self.quoteVault = Pubkey.from_string(quote_vault)
 
 
 class ApiPoolInfo:
@@ -49,12 +54,42 @@ class ApiPoolInfo:
             + [bytes(7)],
             liquidity_pool.marketProgramId,
         )
-        self.marketBaseVault = liquidity_pool.baseVault
-        self.marketQuoteVault = liquidity_pool.quoteVault
+        self.marketBaseVault = market_state.baseVault
+        self.marketQuoteVault = market_state.quoteVault
         self.marketBids = market_state.bids
         self.marketAsks = market_state.asks
         self.marketEventQueue = market_state.eventQueue
         self.lookupTableAccount = Pubkey.default()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'baseMint': self.baseMint,
+            'quoteMint': self.quoteMint,
+            'lpMint': self.lpMint,
+            'baseDecimals': self.baseDecimals,
+            'quoteDecimals': self.quoteDecimals,
+            'lpDecimals': self.lpDecimals,
+            'version': self.version,
+            'programId': self.programId,
+            'authority': self.authority,
+            'openOrders': self.openOrders,
+            'targetOrders': self.targetOrders,
+            'baseVault': self.baseVault,
+            'quoteVault': self.quoteVault,
+            'withdrawQueue': self.withdrawQueue,
+            'lpVault': self.lpVault,
+            'marketVersion': self.marketVersion,
+            'marketProgramId': self.marketProgramId,
+            'marketId': self.marketId,
+            'marketAuthority': self.marketAuthority,
+            'marketBaseVault': self.marketBaseVault,
+            'marketQuoteVault': self.marketQuoteVault,
+            'marketBids': self.marketBids,
+            'marketAsks': self.marketAsks,
+            'marketEventQueue': self.marketEventQueue,
+            'lookupTableAccount': self.lookupTableAccount,
+        }
 
     def __str__(self):
         return (

@@ -2,7 +2,8 @@ from io import BytesIO
 
 from borsh_construct import CStruct, String, U8, U16, U64, Vec, Option, Bool, Enum
 
-from construct import Bytes, Int8ul, Int64ul, Padding, BitsInteger, BitsSwapped, BitStruct, Const, Flag, BytesInteger
+from construct import Bytes, Int8ul, Int64ul, Padding, BitsInteger, BitsSwapped, BitStruct, Const, Flag, BytesInteger, \
+    Adapter
 from construct import Struct as cStruct
 
 import base58, json
@@ -156,6 +157,15 @@ ACCOUNT_FLAGS_LAYOUT = BitsSwapped(  # Swap to little endian
         Const(0, BitsInteger(57)),  # Padding
     )
 )
+
+class PublicKeyAdapter(Adapter):
+    def _decode(self, obj, context, path):
+        # 将字节序列转换为PublicKey对象
+        return Pubkey(obj)
+
+    def _encode(self, obj, context, path):
+        # 将PublicKey对象转换为字节序列
+        return bytes(obj)
 
 MARKET_LAYOUT = cStruct(
     Padding(5),

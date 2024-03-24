@@ -3,45 +3,68 @@ import time
 
 import websockets
 from loguru import logger
-from solana.rpc.commitment import Finalized, Confirmed
+from solana.rpc.commitment import Finalized, Confirmed, Processed
 from solana.rpc.types import MemcmpOpts, DataSliceOpts
 from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
 from solders.pubkey import Pubkey
 
-from orm.crud.raydium import get_market_state
+from orm.crud.raydium import get_market_state, create_pool
 from settings.config import AppConfig
-from solana_dex_v1.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, SOL_MINT_ADDRESS
-from solana_dex_v1.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
-from solana_dex_v1.raydium.models import ApiPoolInfo
-from solana_dex_v1.transaction_processor import TransactionProcessor
+from settings.global_variables import GlobalVariables
+from solana_dex.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, SOL_MINT_ADDRESS, LAMPORTS_PER_SOL
+from solana_dex.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
+from solana_dex.raydium.models import ApiPoolInfo
+from solana_dex.transaction_processor import TransactionProcessor
 
 exclude_address_set = set()
 
 
-def check_raydium_liquidity():
-    pass
+async def get_market_state_with_retry(base_mint, max_attempts=10):
+    attempt = 0
+    while attempt < max_attempts:
+        market_state = await get_market_state(base_mint)
+        if market_state:
+            return market_state
+        attempt += 1
+        await asyncio.sleep(0.2)  # 等待一段时间后重试
+    return None
+
+
+async def check_raydium_liquidity(quote_vault):
+    try:
+        qvalue = await GlobalVariables.SolaraClient.get_balance(quote_vault)
+        sol = qvalue.value / LAMPORTS_PER_SOL
+        if sol > AppConfig.POOL_SIZE:
+            return True
+        else:
+            return False
+    except:
+        return False
 
 
 async def parse_liqudity_data(data):
     run_timestamp = time.time()
     try:
         pool_state = LIQUIDITY_STATE_LAYOUT_V4.parse(data.result.value.account.data)
-        if pool_state.baseMint in exclude_address_set:
-            return
         poolOpenTime = pool_state.poolOpenTime
-        if run_timestamp - poolOpenTime < 60:
-            market_state = await get_market_state(pool_state.baseMint)
+        if run_timestamp - poolOpenTime < AppConfig.RUN_LP_TIME:
+            if pool_state.baseMint in exclude_address_set:
+                return
+            exclude_address_set.add(pool_state.baseMint)
+            market_state = await get_market_state_with_retry(pool_state.baseMint)
             if market_state:
-                exclude_address_set.add(pool_state.baseMint)
-                # check_raydium_liquidity(pool_state.baseMint)
                 logger.info(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配成功")
                 pool_info = ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model())
-                await TransactionProcessor.append_buy(pool_info)
+                if AppConfig.POOL_SIZE != 0 and not await check_raydium_liquidity(pool_info.quoteVault):
+                    return
+                asyncio.create_task(TransactionProcessor.append_buy(pool_info))
+                asyncio.create_task(create_pool(data.result.value.pubkey, pool_info.to_dict()))
             else:
                 logger.warning(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配失败")
+                exclude_address_set.discard(pool_state.baseMint)
     except Exception as e:
         logger.info(e)
 

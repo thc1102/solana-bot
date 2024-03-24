@@ -6,13 +6,16 @@ async def bulk_create_pools(data_list):
     return pools
 
 
-async def create_pool(data):
-    pool = await RaydiumPool.create(**data)
-    return pool
+async def create_pool(pool_id, data):
+    db_pool = await get_pool(pool_id)
+    if db_pool is None:
+        pool = await RaydiumPool.create(**data)
+        return pool
+    return db_pool
 
 
 async def get_pool(pool_id):
-    pool = await RaydiumPool.get_or_none(id=pool_id)
+    pool = await RaydiumPool.filter(id=pool_id).first()
     return pool
 
 
@@ -25,7 +28,7 @@ async def delete_pool(pool_id):
 
 
 async def get_pool_by_mint(base_mint):
-    pool = await RaydiumPool.filter(baseMint=base_mint)
+    pool = await RaydiumPool.filter(baseMint=base_mint).order_by("-updatedAt").first()
     return pool
 
 

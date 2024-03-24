@@ -1,12 +1,15 @@
 import asyncio
+import signal
+import sys
 
 from loguru import logger
 from solders.pubkey import Pubkey
 from spl.token.instructions import get_associated_token_address
 from tortoise import Tortoise
 from settings.config import AppConfig
-from solana_dex_v1.solana.wallet import Wallet
-from solana_dex_v1.websocket import openbook, liquidity
+from solana_dex.common.constants import SOL_MINT_ADDRESS
+from solana_dex.solana.wallet import Wallet
+from solana_dex.websocket import openbook, liquidity
 
 from settings.global_variables import GlobalVariables
 
@@ -16,37 +19,37 @@ async def init_db():
         db_url='sqlite://db.sqlite3',
         modules={'models': ['orm.models.raydium']}
     )
-    # Generate the schema
     await Tortoise.generate_schemas()
-
-    # with open(r"D:\Code\solana-bot\liquidity_mainnet.json", encoding="utf-8") as f:
-    #     data = json.loads(f.read())
-    # data_list = []
-    # data_list.extend(data.get("unOfficial"))
-    # data_list.extend(data.get("official"))
-    # print(len(data_list))
-    # print(await RaydiumPoolHelper.get_all_primary_keys())
-    # await RaydiumPoolHelper.bulk_create_pools(data_list)
-
-    # print(await RaydiumPoolHelper.get_pool_by_mint("24gG4br5xFBRmxdqpgirtxgcr7BaWoErQfc2uyDp2Qhh1"))
-    # Close Tortoise ORM
-    # await Tortoise.close_connections()
 
 
 async def init_wallet():
     wallet = Wallet(AppConfig.PRIVATE_KEY)
+    await wallet.update_token_accounts()
+    wsol_token = wallet.get_token_accounts(SOL_MINT_ADDRESS)
+    if wsol_token is None:
+        logger.info("wSOl账户不存在无法使用")
+        GlobalVariables.stop_event.set()
+        return
     sol_balance = await wallet.get_sol_balance()
-    logger.info(f"当前账户地址 {wallet.get_pubkey()} SOL余额 {sol_balance}")
-    # await wallet.get_token_accounts()
+    logger.info(f"当前账户地址 {wallet.pubkey} SOL余额 {sol_balance} wSOL余额 {wsol_token.uiAmount}")
+    GlobalVariables.default_wallet = wallet
 
 
 async def run():
-    await init_db()
-    await init_wallet()
-    stop_event = asyncio.Event()
-    asyncio.create_task(openbook.run())
-    asyncio.create_task(liquidity.run())
-    await stop_event.wait()
+    try:
+        # 初始化数据库
+        await init_db()
+        # 初始化钱包
+        await init_wallet()
+        # 启动websocket监控
+        asyncio.create_task(openbook.run())
+        asyncio.create_task(liquidity.run())
+        # 等待结束指令
+        await GlobalVariables.stop_event.wait()
+    finally:
+        # 关闭数据库
+        await Tortoise.close_connections()
+        sys.exit(0)
 
 
 if __name__ == '__main__':

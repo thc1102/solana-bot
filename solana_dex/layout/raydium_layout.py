@@ -2,7 +2,7 @@ from construct import Struct
 
 from solana_dex.layout.utils import pad, publicKey, u8, u64, u128
 
-ROUTE_DATA_LAYOUT = Struct(u8("instruction"), u64("amountIn"), u64("amountOut"))
+ROUTE_DATA_LAYOUT = Struct(u8("instruction"), u64("amountIn"), u64("minAmountOut"))
 
 LIQUIDITY_STATE_LAYOUT_V4 = Struct(
     u64("status"),

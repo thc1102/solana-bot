@@ -10,8 +10,8 @@ from asyncstdlib import enumerate
 from orm.crud.raydium import create_market_state
 from orm.models.raydium import MarketState
 from settings.config import AppConfig
-from solana_dex_v1.common.constants import OPENBOOK_MARKET, SOL_MINT_ADDRESS
-from solana_dex_v1.layout.serum_layout import MARKET_STATE_LAYOUT_V3
+from solana_dex.common.constants import OPENBOOK_MARKET, SOL_MINT_ADDRESS
+from solana_dex.layout.serum_layout import MARKET_STATE_LAYOUT_V3
 
 exclude_address_set = set()
 
@@ -24,7 +24,7 @@ async def parse_openbook_data(data):
         exclude_address_set.add(info.baseMint)
         await create_market_state(
             {"baseMint": info.baseMint, "eventQueue": info.eventQueue, "bids": info.bids, "asks": info.asks,
-             "vaultSignerNonce": info.vaultSignerNonce}
+             "vaultSignerNonce": info.vaultSignerNonce, "baseVault": info.baseVault, "quoteVault": info.quoteVault}
         )
     except Exception as e:
         logger.exception(e)
