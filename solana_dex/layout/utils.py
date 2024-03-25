@@ -50,7 +50,6 @@ def blob(key: str, length: int):
     key = preprocess_key(key)
     return key / Bytes(length)
 
-
 class PublicKeyAdapter(Adapter):
     def _decode(self, obj, context, path):
         # 将字节序列转换为PublicKey对象
