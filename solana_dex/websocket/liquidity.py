@@ -63,7 +63,7 @@ async def parse_liqudity_data(data):
                 pool_info = ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model())
                 if AppConfig.POOL_SIZE != 0 and not await check_raydium_liquidity(pool_info.quoteVault):
                     return
-                asyncio.create_task(TransactionProcessor.append_buy(pool_info))
+                # asyncio.create_task(TransactionProcessor.append_buy(pool_info))
                 asyncio.create_task(create_pool(data.result.value.pubkey, pool_info.to_dict()))
             else:
                 logger.warning(

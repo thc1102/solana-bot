@@ -1,23 +1,26 @@
 import asyncio
-import signal
 import sys
 
+try:
+    import uvloop
+
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+except:
+    pass
+
 from loguru import logger
-from solders.pubkey import Pubkey
-from spl.token.instructions import get_associated_token_address
 from tortoise import Tortoise
+
 from settings.config import AppConfig
-from solana_dex.common.constants import SOL_MINT_ADDRESS
+from settings.global_variables import GlobalVariables
 from solana_dex.solana.wallet import Wallet
 from solana_dex.websocket import openbook, liquidity
-
-from settings.global_variables import GlobalVariables
 
 
 async def init_db():
     await Tortoise.init(
         db_url='sqlite://db.sqlite3',
-        modules={'models': ['orm.models.raydium']}
+        modules={'models': ['orm.models.raydium', 'orm.models.tasks']}
     )
     await Tortoise.generate_schemas()
 
