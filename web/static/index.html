@@ -120,7 +120,7 @@
                         </div>
                     </template>
                     <div class="text item">
-                        <el-table :data="tasksData" max-height="450">
+                        <el-table :data="tasksLogData" max-height="450">
                             <el-table-column prop="baseMint" label="baseMint"></el-table-column>
                             <el-table-column prop="amount" label="amount"></el-table-column>
                             <el-table-column prop="status" label="status"></el-table-column>
@@ -323,7 +323,8 @@
                 getTasksLog,
                 deleteTasksLog,
                 open_solscan,
-                open_dexscreener
+                open_dexscreener,
+                tasksLogData
             }
         }
     }).use(ElementPlus).mount('#app')

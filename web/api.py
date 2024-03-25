@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from orm.crud import tasks
 from orm.models.tasks import TasksLog
 from settings.config import AppConfig
+from utils.public import update_snipe_list
 from web.utils import update_object, custom_datetime_serializer
 
 router = APIRouter(prefix="/api")
@@ -76,12 +77,14 @@ async def get_tasks():
 @router.post("/create_tasks")
 async def create_tasks(tasks_data: TasksData):
     await tasks.create_tasks(tasks_data.dict())
+    asyncio.create_task(update_snipe_list())
     return "ok"
 
 
 @router.post("/delete_tasks")
 async def delete_tasks(data: DeleteData):
     await tasks.delete_tasks(data.id)
+    asyncio.create_task(update_snipe_list())
     return "ok"
 
 

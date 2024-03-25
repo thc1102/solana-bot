@@ -8,6 +8,7 @@ from starlette.staticfiles import StaticFiles
 from fastapi import FastAPI
 
 from main import run
+from settings.config import AppConfig
 from web.api import router
 
 
@@ -30,4 +31,4 @@ if __name__ == '__main__':
     app.include_router(router)
     # 注册静态资源
     app.mount("/static", StaticFiles(directory="web/static"), name="static")
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app, host="127.0.0.1", port=AppConfig.WEB_PORT, log_level="error")

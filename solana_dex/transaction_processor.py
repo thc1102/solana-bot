@@ -1,5 +1,7 @@
 import asyncio
 
+from loguru import logger
+
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
 from solana_dex.raydium.models import ApiPoolInfo
@@ -28,8 +30,9 @@ class TransactionProcessor:
     """
 
     @staticmethod
-    async def append_buy(api_pool_info: ApiPoolInfo, check_buy_repeat: bool = True):
+    async def append_buy(api_pool_info: ApiPoolInfo, task_info=None, check_buy_repeat: bool = True):
         try:
+
             if check_buy_repeat:
                 if api_pool_info.baseMint in exclude_buy_set:
                     return
@@ -39,14 +42,13 @@ class TransactionProcessor:
             global test_num
             if test_num:
                 return
-            # 检测是否狙击模式
-            if AppConfig.USE_SNIPE_LIST:
-                pass
-            if not AppConfig.AUTO_TRADING:
-                return
             wallet = GlobalVariables.default_wallet
             swap = SwapCore(wallet, api_pool_info, AppConfig.MICROLAMPORTS)
-            buy = await send_with_retry(lambda: swap.buy(api_pool_info.baseMint, AppConfig.AUTO_QUOTE_AMOUNT),
+            if task_info:
+                amount = task_info.amount
+            else:
+                amount = AppConfig.AUTO_QUOTE_AMOUNT
+            buy = await send_with_retry(lambda: swap.buy(api_pool_info.baseMint, amount),
                                         max_attempts=AppConfig.MAX_BUY_RETRIES)
             # 购买完成后去重
             exclude_buy_set.discard(api_pool_info.baseMint)
@@ -60,7 +62,7 @@ class TransactionProcessor:
             # 创建售出任务
             asyncio.create_task(TransactionProcessor.append_sell(api_pool_info))
         except Exception as e:
-            print(e)
+            logger.error(e)
 
     @staticmethod
     async def append_sell(api_pool_info: ApiPoolInfo, swap: SwapCore = None):

@@ -1,7 +1,10 @@
+import asyncio
+
 from loguru import logger
 from solana.rpc.commitment import Confirmed
 from solders.pubkey import Pubkey
 
+from orm.crud.tasks import create_tasks_log
 from settings.global_variables import GlobalVariables
 from solana_dex.common.constants import LAMPORTS_PER_SOL
 from solana_dex.raydium.models import ApiPoolInfo
@@ -61,6 +64,14 @@ class SwapCore:
             txn_signature = await self._buy(mint, amount_in)
             logger.info(f"购买结束 https://solscan.io/tx/{txn_signature}")
             logger.info(f"dexscreener https://dexscreener.com/solana/{mint}?maker={self.wallet.pubkey}")
+            asyncio.create_task(create_tasks_log({
+                "pubkey": self.wallet.pubkey,
+                "baseMint": mint,
+                "tx": txn_signature,
+                "amount": amount,
+                "status": "购买任务",
+                "result": "完成"
+            }))
             return True
         except Exception as e:
             logger.info(f"交易失败 {e}")
@@ -78,6 +89,14 @@ class SwapCore:
                         return False
                     txn_signature = await self._sell(mint_amount)
                     logger.info(f"出售结束 https://solscan.io/tx/{txn_signature}")
+                    asyncio.create_task(create_tasks_log({
+                        "pubkey": self.wallet.pubkey,
+                        "baseMint": mint,
+                        "tx": txn_signature,
+                        "amount": amount,
+                        "status": "出售任务",
+                        "result": "完成"
+                    }))
                     return True
                 else:
                     logger.info(f"出售结束 {mint} 代币不存在")

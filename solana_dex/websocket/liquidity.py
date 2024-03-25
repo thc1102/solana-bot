@@ -14,6 +14,7 @@ from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
 from solana_dex.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, SOL_MINT_ADDRESS, LAMPORTS_PER_SOL
 from solana_dex.layout.raydium_layout import LIQUIDITY_STATE_LAYOUT_V4
+from solana_dex.layout.solana_layout import MINT_LAYOUT
 from solana_dex.raydium.models import ApiPoolInfo
 from solana_dex.transaction_processor import TransactionProcessor
 
@@ -35,6 +36,7 @@ async def check_raydium_liquidity(quote_vault):
     try:
         qvalue = await GlobalVariables.SolaraClient.get_balance(quote_vault)
         sol = qvalue.value / LAMPORTS_PER_SOL
+        print(quote_vault, sol)
         if sol > AppConfig.POOL_SIZE:
             return True
         else:
@@ -43,8 +45,14 @@ async def check_raydium_liquidity(quote_vault):
         return False
 
 
-async def check_mint_status(mint):
-    pass
+async def check_mint_status(mint: Pubkey):
+    resp = await GlobalVariables.SolaraClient.get_account_info(mint)
+    mint_info = MINT_LAYOUT.parse(resp.value.data)
+    print(mint, mint_info.mintAuthorityOption, mint_info.freezeAuthorityOption == 0)
+    if mint_info.mintAuthorityOption == 0 and mint_info.freezeAuthorityOption == 0:
+        return True
+    else:
+        return False
 
 
 async def parse_liqudity_data(data):
@@ -58,13 +66,33 @@ async def parse_liqudity_data(data):
             exclude_address_set.add(pool_state.baseMint)
             market_state = await get_market_state_with_retry(pool_state.baseMint)
             if market_state:
+                task_list = []
                 logger.info(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配成功")
                 pool_info = ApiPoolInfo(data.result.value.pubkey, pool_state, market_state.to_model())
-                if AppConfig.POOL_SIZE != 0 and not await check_raydium_liquidity(pool_info.quoteVault):
-                    return
-                # asyncio.create_task(TransactionProcessor.append_buy(pool_info))
+                # 给数据库新增池信息
                 asyncio.create_task(create_pool(data.result.value.pubkey, pool_info.to_dict()))
+                # 狙击模式优先
+                if AppConfig.USE_SNIPE_LIST:
+                    tasks_info = GlobalVariables.snipe_list.get(pool_state.baseMint)
+                    if tasks_info:
+                        asyncio.create_task(TransactionProcessor.append_buy(pool_info, tasks_info))
+                        return False
+                # 流动池检测
+                if AppConfig.POOL_SIZE != 0:
+                    task_list.append(check_raydium_liquidity(pool_info.quoteVault))
+                # Mint权限检测
+                if AppConfig.CHECK_IF_MINT_IS_RENOUNCED:
+                    task_list.append(check_mint_status(pool_state.baseMint))
+                if len(task_list) != 0:
+                    results = await asyncio.gather(*task_list)
+                    if any(result is False for result in results):
+                        logger.info(f"{pool_state.baseMint} 验证未通过")
+                        return False
+                    else:
+                        asyncio.create_task(TransactionProcessor.append_buy(pool_info))
+                        return True
+                asyncio.create_task(TransactionProcessor.append_buy(pool_info))
             else:
                 logger.warning(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配失败")

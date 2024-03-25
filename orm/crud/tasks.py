@@ -7,7 +7,7 @@ async def create_tasks(data):
 
 
 async def get_tasks():
-    tasks = await Tasks.all()
+    tasks = await Tasks.all().order_by("-updatedAt")
     return tasks
 
 
@@ -21,7 +21,7 @@ async def create_tasks_log(data):
 
 
 async def get_tasks_log():
-    tasks_log = await TasksLog.all()
+    tasks_log = await TasksLog.all().order_by("-updatedAt")
     return tasks_log
 
 

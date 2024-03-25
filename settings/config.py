@@ -16,6 +16,7 @@ class Config(BaseSettings):
     POOL_SIZE: int = 1000
     AUTO_SELL_TIME: int = 60
     RUN_LP_TIME: int = 60
+    WEB_PORT: int = 5000
 
     class Config:
         env_file = '.env'
