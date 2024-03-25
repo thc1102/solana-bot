@@ -6,38 +6,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <!-- Import style -->
     <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css"/>
-    <!-- Import component library -->
     <script src="//unpkg.com/element-plus"></script>
     <style>
         #app {
-            max-width: 500px; /* 设置元素的宽度 */
+            width: 100%; /* 设置元素的宽度 */
             margin-left: auto; /* 将左边距设置为自动 */
             margin-right: auto; /* 将右边距设置为自动 */
-            text-align: center; /* 可选：如果需要文本居中，也可以使用这个属性 */
         }
     </style>
 </head>
 <body>
 <div id="app">
-    <div style="margin-top: 30px">
-        <el-space wrap>
-            <el-input v-model="keyword" placeholder="请输入关键字" size="large"></el-input>
-            <el-button type="primary" @click="query_tm" size="large">搜索</el-button>
-            <el-button type="primary" @click="query_jd" size="large">简答题</el-button>
-        </el-space>
-    </div>
+    <el-card style="max-width: 100%;margin: 10px 0">
+        <div style="font-size: 26px;color: #303133;font-weight: bold">
+            SOLANA BOT
+        </div>
+    </el-card>
 
-    <div id="result" style="margin-top: 30px">
-        <template v-for="data in result">
-            <el-card>
-                <div style="white-space: pre-wrap;text-align: left">题目：<span v-html="highlightText(data.tm, keyword)"></span></div>
-                <div style="margin-top: 20px">答案：<span style="color: red">{{data.da}}</span></div>
-            </el-card>
-            <div style="margin-bottom: 10px"></div>
-        </template>
-    </div>
+    <!--    <el-card class="box-card">-->
+    <!--        <template #header>-->
+    <!--            <div class="card-header">-->
+    <!--                <span>程序配置</span>-->
+    <!--            </div>-->
+    <!--        </template>-->
+    <!--        <div class="text item">-->
+    <!--        </div>-->
+    <!--    </el-card>-->
+    <!--    <el-card class="box-card">-->
+    <!--        <template #header>-->
+    <!--            <div class="card-header">-->
+    <!--                <span>狙击列表</span>-->
+    <!--            </div>-->
+    <!--        </template>-->
+    <!--        <div class="text item">-->
+    <!--        </div>-->
+    <!--    </el-card>-->
+    <!--    <el-card class="box-card">-->
+    <!--        <template #header>-->
+    <!--            <div class="card-header">-->
+    <!--                <span>快速交易</span>-->
+    <!--            </div>-->
+    <!--        </template>-->
+    <!--        <div class="text item">-->
+    <!--        </div>-->
+    <!--    </el-card>-->
+    <!--    <el-card class="box-card">-->
+    <!--        <template #header>-->
+    <!--            <div class="card-header">-->
+    <!--                <span>任务日志</span>-->
+    <!--            </div>-->
+    <!--        </template>-->
+    <!--        <el-table :data="tableData">-->
+    <!--            <el-table-column prop="date" label="Date" width="10"/>-->
+    <!--            <el-table-column prop="name" label="Name" width="10"/>-->
+    <!--            <el-table-column prop="address" label="Address"/>-->
+    <!--        </el-table>-->
+    <!--    </el-card>-->
 </div>
 
 </body>
@@ -47,42 +72,30 @@
 
     createApp({
         setup() {
-            const keyword = ref('')
-            const result = ref([])
-            const query_tm = () => {
-                axios.post('/query', {
-                    word: keyword.value
-                }).then(function (response) {
-                    result.value = response.data
-                    console.log(response);
-                }).catch(function (error) {
-                    console.log(error);
-                });
-            }
-            const query_jd = () => {
-                axios.get('/jdt_list').then(function (response) {
-                    result.value = response.data
-                    console.log(response);
-                }).catch(function (error) {
-                    console.log(error);
-                });
-            }
-
-            const highlightText = (text, keyword) => {
-                if (!keyword) {
-                    return text; // 如果没有关键字，则返回原始文本
-                }
-
-                // 使用正则表达式匹配并替换关键字
-                const regex = new RegExp(keyword, 'gi');
-                return text.replace(regex, '<span style="color: blue">' + keyword + '</span>');
-            };
+            const tableData = [
+                {
+                    date: '2016-05-03',
+                    name: 'Tom',
+                    address: 'No. 189, Grove St, Los Angeles',
+                },
+                {
+                    date: '2016-05-02',
+                    name: 'Tom',
+                    address: 'No. 189, Grove St, Los Angeles',
+                },
+                {
+                    date: '2016-05-04',
+                    name: 'Tom',
+                    address: 'No. 189, Grove St, Los Angeles',
+                },
+                {
+                    date: '2016-05-01',
+                    name: 'Tom',
+                    address: 'No. 189, Grove St, Los Angeles',
+                },
+            ]
             return {
-                keyword,
-                query_tm,
-                query_jd,
-                result,
-                highlightText
+                tableData
             }
         }
     }).use(ElementPlus).mount('#app')

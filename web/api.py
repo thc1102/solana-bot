@@ -12,7 +12,6 @@ app.mount("/web/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def read_root():
-    # return {"Hello": "World"}
     return RedirectResponse(url="/web/static/index.html")
 
 
