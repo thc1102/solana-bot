@@ -1,7 +1,6 @@
 import solders.system_program as sp
 import spl.token.instructions as spl_token
 from solana.rpc.async_api import AsyncClient
-from solana.rpc.types import TokenAccountOpts
 from solders.compute_budget import set_compute_unit_price, set_compute_unit_limit
 from solders.instruction import AccountMeta, Instruction
 from solders.keypair import Keypair
@@ -82,7 +81,10 @@ class SwapTransactionBuilder:
         self.new_keypair = None
 
     async def compile_versioned_transaction(self):
-        recent_blockhash = (await self.client.get_latest_blockhash()).value
+        try:
+            recent_blockhash = self.client.blockhash_cache.get()
+        except:
+            recent_blockhash = (await self.client.get_latest_blockhash()).value
         compiled_message = MessageV0.try_compile(
             self.payer.pubkey(),
             self.instructions,
@@ -107,13 +109,12 @@ class SwapTransactionBuilder:
             )
         )
 
-    async def append_sell(self, amount_in: int, check_associated_token_account_exists=True):
+    async def append_sell(self, amount_in: int):
         pay_for_rent = await AsyncToken.get_min_balance_rent_for_exempt_for_account(self.client)
         self.append_set_compute_budget(self.unit_price, self.unit_budget)
         source = get_associated_token_address(self.payer.pubkey(), self.baseMint)
-        dest = self.append_create_account(pay_for_rent)
-        if check_associated_token_account_exists:
-            await self.append_if_not_exists_create_associated_token_account(self.quoteMint)
+        dest = self.append_create_account(pay_for_rent, 0)
+        self.append_initialize_account(dest.pubkey())
         self.append_swap(amount_in, source, dest.pubkey())
         self.append_close_account(dest.pubkey())
 
@@ -168,7 +169,7 @@ class SwapTransactionBuilder:
                 )
             )
         )
-        if amount == 0:
+        if amount != 0:
             self.instructions.append(
                 sp.transfer(
                     sp.TransferParams(

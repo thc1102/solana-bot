@@ -7,6 +7,6 @@ from settings.config import AppConfig
 
 
 class GlobalVariables:
-    SolaraClient = AsyncClient(endpoint=AppConfig.RPC_ENDPOINT, commitment=Confirmed)
+    SolaraClient = AsyncClient(endpoint=AppConfig.RPC_ENDPOINT, commitment=Confirmed, blockhash_cache=True)
     stop_event = asyncio.Event()
     default_wallet = None

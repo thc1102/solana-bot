@@ -1,21 +1,11 @@
 from loguru import logger
-from solana.rpc.commitment import Confirmed, Commitment
-from solana.transaction import Transaction
-from solders.compute_budget import set_compute_unit_price
-from solders.message import MessageV0
+from solana.rpc.commitment import Confirmed
 from solders.pubkey import Pubkey
-from solders.system_program import create_account_with_seed, CreateAccountWithSeedParams
-from solders.token.associated import get_associated_token_address
-from solders.transaction import VersionedTransaction
-from spl.token.async_client import AsyncToken
-from spl.token.core import _TokenCore
-from spl.token.instructions import create_associated_token_account, CloseAccountParams, close_account
 
-from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
-from solana_dex.common.constants import LAMPORTS_PER_SOL, SOL_MINT_ADDRESS, TOKEN_PROGRAM_ID
+from solana_dex.common.constants import LAMPORTS_PER_SOL
 from solana_dex.raydium.models import ApiPoolInfo
-from solana_dex.raydium.swap_util import make_swap_instruction, SwapTransactionBuilder
+from solana_dex.raydium.swap_util import SwapTransactionBuilder
 from solana_dex.solana.solana_client import SolanaRPCClient
 from solana_dex.solana.wallet import Wallet
 
@@ -55,8 +45,7 @@ class SwapCore:
         """
         swap_transaction_builder = SwapTransactionBuilder(GlobalVariables.SolaraClient, self.pool_info,
                                                           self.wallet.keypair, unit_price=self.compute_unit_price)
-
-        await swap_transaction_builder.append_sell(amount_in, not self.wallet.check_token_accounts(SOL_MINT_ADDRESS))
+        await swap_transaction_builder.append_sell(amount_in)
         transaction = await swap_transaction_builder.compile_versioned_transaction()
         txn_signature = (await GlobalVariables.SolaraClient.send_transaction(transaction)).value
         logger.info(f"交易创建完成 {txn_signature}")

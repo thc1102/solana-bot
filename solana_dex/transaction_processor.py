@@ -1,13 +1,9 @@
 import asyncio
-import time
-
-from solders.pubkey import Pubkey
 
 from settings.config import AppConfig
+from settings.global_variables import GlobalVariables
 from solana_dex.raydium.models import ApiPoolInfo
 from solana_dex.raydium.swap_core import SwapCore
-from solana_dex.solana.wallet import Wallet
-from settings.global_variables import GlobalVariables
 
 # 测试购买
 test_num = False

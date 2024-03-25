@@ -2,9 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>SOLANA BOT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- Import style -->
+    <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css"/>
+    <!-- Import component library -->
+    <script src="//unpkg.com/element-plus"></script>
+    <style>
+        #app {
+            max-width: 500px; /* 设置元素的宽度 */
+            margin-left: auto; /* 将左边距设置为自动 */
+            margin-right: auto; /* 将右边距设置为自动 */
+            text-align: center; /* 可选：如果需要文本居中，也可以使用这个属性 */
+        }
+    </style>
 </head>
 <body>
+<div id="app">
+    <div style="margin-top: 30px">
+        <el-space wrap>
+            <el-input v-model="keyword" placeholder="请输入关键字" size="large"></el-input>
+            <el-button type="primary" @click="query_tm" size="large">搜索</el-button>
+            <el-button type="primary" @click="query_jd" size="large">简答题</el-button>
+        </el-space>
+    </div>
+
+    <div id="result" style="margin-top: 30px">
+        <template v-for="data in result">
+            <el-card>
+                <div style="white-space: pre-wrap;text-align: left">题目：<span v-html="highlightText(data.tm, keyword)"></span></div>
+                <div style="margin-top: 20px">答案：<span style="color: red">{{data.da}}</span></div>
+            </el-card>
+            <div style="margin-bottom: 10px"></div>
+        </template>
+    </div>
+</div>
 
 </body>
+
+<script>
+    const {createApp, ref} = Vue
+
+    createApp({
+        setup() {
+            const keyword = ref('')
+            const result = ref([])
+            const query_tm = () => {
+                axios.post('/query', {
+                    word: keyword.value
+                }).then(function (response) {
+                    result.value = response.data
+                    console.log(response);
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            }
+            const query_jd = () => {
+                axios.get('/jdt_list').then(function (response) {
+                    result.value = response.data
+                    console.log(response);
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            }
+
+            const highlightText = (text, keyword) => {
+                if (!keyword) {
+                    return text; // 如果没有关键字，则返回原始文本
+                }
+
+                // 使用正则表达式匹配并替换关键字
+                const regex = new RegExp(keyword, 'gi');
+                return text.replace(regex, '<span style="color: blue">' + keyword + '</span>');
+            };
+            return {
+                keyword,
+                query_tm,
+                query_jd,
+                result,
+                highlightText
+            }
+        }
+    }).use(ElementPlus).mount('#app')
+</script>
 </html>

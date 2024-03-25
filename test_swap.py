@@ -45,9 +45,10 @@ async def run():
     wallet = Wallet(AppConfig.PRIVATE_KEY)
     await wallet.update_token_accounts()
     swap = SwapCore(wallet, pool_info)
+    print(wallet.pubkey)
 
     puy = await swap.buy(Pubkey.from_string("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82"), 0.01)
-    await asyncio.sleep(30)
+    await asyncio.sleep(60)
     if puy:
         await swap.sell(Pubkey.from_string("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82"))
 
