@@ -76,18 +76,18 @@ async def parse_liqudity_data(data):
                     if tasks_info:
                         asyncio.create_task(TransactionProcessor.append_buy(pool_info, tasks_info))
                         return False
-                # 流动池检测
-                if AppConfig.POOL_SIZE != 0:
-                    task_list.append(check_raydium_liquidity(pool_info.quoteVault))
-                # Mint权限检测
-                if AppConfig.CHECK_IF_MINT_IS_RENOUNCED:
-                    task_list.append(check_mint_status(pool_state.baseMint))
-                if len(task_list) != 0:
-                    results = await asyncio.gather(*task_list)
-                    if any(result is False for result in results):
-                        logger.info(f"{pool_state.baseMint} 验证未通过")
-                        return False
                 if AppConfig.AUTO_TRADING:
+                    # 流动池检测
+                    if AppConfig.POOL_SIZE != 0:
+                        task_list.append(check_raydium_liquidity(pool_info.quoteVault))
+                    # Mint权限检测
+                    if AppConfig.CHECK_IF_MINT_IS_RENOUNCED:
+                        task_list.append(check_mint_status(pool_state.baseMint))
+                    if len(task_list) != 0:
+                        results = await asyncio.gather(*task_list)
+                        if any(result is False for result in results):
+                            logger.info(f"{pool_state.baseMint} 验证未通过")
+                            return False
                     asyncio.create_task(TransactionProcessor.append_buy(pool_info))
             else:
                 logger.warning(
