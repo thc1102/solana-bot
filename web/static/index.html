@@ -151,6 +151,14 @@
                     </template>
                     <div class="text item">
                         <div>钱包地址: {{pubkey}}</div>
+                        <el-select v-model="value" placeholder="Select" style="width: 240px">
+                            <el-option
+                                    v-for="item in options"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value"
+                            />
+                        </el-select>
                     </div>
                 </el-card>
             </el-col>
@@ -308,6 +316,29 @@
                 const url = "https://dexscreener.com/solana/" + data.baseMint + "?maker=" + data.pubkey
                 window.open(url, "_blank");
             }
+
+            const options = [
+                {
+                    value: 'Option1',
+                    label: 'Option1',
+                },
+                {
+                    value: 'Option2',
+                    label: 'Option2',
+                },
+                {
+                    value: 'Option3',
+                    label: 'Option3',
+                },
+                {
+                    value: 'Option4',
+                    label: 'Option4',
+                },
+                {
+                    value: 'Option5',
+                    label: 'Option5',
+                },
+            ]
             // 刷新时执行
             getConfig()
             getTasks()
@@ -328,7 +359,8 @@
                 open_solscan,
                 open_dexscreener,
                 tasksLogData,
-                pubkey
+                pubkey,
+                options
             }
         }
     }).use(ElementPlus).mount('#app')
