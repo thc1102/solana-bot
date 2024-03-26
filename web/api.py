@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from orm.crud import tasks
 from orm.models.tasks import TasksLog
 from settings.config import AppConfig
+from settings.global_variables import GlobalVariables
 from utils.public import update_snipe_list
 from web.utils import update_object, custom_datetime_serializer
 
@@ -101,3 +102,26 @@ async def get_tasks_log():
 async def delete_tasks():
     await tasks.delete_task_log()
     return "ok"
+
+
+@router.get("/get_wallet")
+async def get_wallet():
+    wallet = {
+        "pubkey": str(GlobalVariables.default_wallet.pubkey),
+        "sol": await GlobalVariables.default_wallet.get_sol_balance()
+    }
+    return wallet
+
+
+@router.get("/get_token")
+async def get_token():
+    await GlobalVariables.default_wallet.update_token_accounts()
+    account_list = []
+    for _, data in GlobalVariables.default_wallet.token_data.items():
+        account_list.append(
+            {
+                "label": data.mint,
+                "value": {"mint": data.mint, "amount": data.uiAmount}
+            }
+        )
+    return account_list

@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css"/>
     <script src="https://unpkg.com/element-plus"></script>
+    <script src="https://unpkg.com/@element-plus/icons-vue"></script>
     <style>
         body {
             margin: 0;
@@ -85,6 +86,63 @@
                 <el-card class="box-card">
                     <template #header>
                         <div class="card-header">
+                            <el-space wrap>
+                                <span>快速交易</span>
+                                <el-button @click="" size="small" type="warning">
+                                    刷新
+                                </el-button>
+                            </el-space>
+                        </div>
+                    </template>
+                    <div class="text item">
+                        <div>钱包地址: {{wallet.pubkey}}</div>
+                        <div>SOL余额: {{wallet.sol}}</div>
+                        <el-divider border-style="dashed"></el-divider>
+                        <div style="">
+                            <el-form
+                                    label-width="auto"
+                            >
+                                <el-form-item label="快速选择">
+                                    <el-select placeholder="快捷选择钱包代币" @change="selectToken">
+                                        <el-option
+                                                v-for="token in tokenData"
+                                                :key="token.label"
+                                                :label="token.label"
+                                                :value="token.value"
+                                        ></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item label="地址输入">
+                                    <el-input v-model="payData.mint" placeholder="请输入代币的地址" clearable/>
+                                </el-form-item>
+                                <el-form-item label="买卖数量">
+                                    <el-input v-model="payData.amount" placeholder="请输入代币的地址" clearable/>
+                                </el-form-item>
+                                <el-form-item label="快捷操作">
+                                    <el-button type="primary" @click="">
+                                        快速买入
+                                    </el-button>
+                                    <el-button type="danger" @click="">
+                                        快速卖出
+                                    </el-button>
+                                    <el-button type="warning" @click="">
+                                        快速注销空账户
+                                    </el-button>
+                                </el-form-item>
+                            </el-form>
+                        </div>
+                    </div>
+                </el-card>
+            </el-col>
+        </el-row>
+
+    </div>
+    <div style="padding: 0 20px;margin: 20px 0">
+        <el-row :gutter="20">
+            <el-col :span="12">
+                <el-card class="box-card">
+                    <template #header>
+                        <div class="card-header">
                             <span>狙击列表</span>
                         </div>
                     </template>
@@ -107,11 +165,6 @@
                     </div>
                 </el-card>
             </el-col>
-        </el-row>
-
-    </div>
-    <div style="padding: 0 20px;margin-top: 20px">
-        <el-row :gutter="20">
             <el-col :span="12">
                 <el-card class="box-card">
                     <template #header>
@@ -142,26 +195,7 @@
                     </div>
                 </el-card>
             </el-col>
-            <el-col :span="12">
-                <el-card class="box-card">
-                    <template #header>
-                        <div class="card-header">
-                            <span>快速交易</span>
-                        </div>
-                    </template>
-                    <div class="text item">
-                        <div>钱包地址: {{pubkey}}</div>
-                        <el-select v-model="value" placeholder="Select" style="width: 240px">
-                            <el-option
-                                    v-for="item in options"
-                                    :key="item.value"
-                                    :label="item.label"
-                                    :value="item.value"
-                            />
-                        </el-select>
-                    </div>
-                </el-card>
-            </el-col>
+
         </el-row>
     </div>
     <el-dialog v-model="addTasksVisible" title="新增狙击任务">
@@ -211,10 +245,20 @@
 
             const addTasksData = ref({
                 "baseMint": "",
-                "amount": 0.01
+                "amount": ""
             })
 
-            const pubkey = ref("")
+            const wallet = ref({
+                "pubkey": "",
+                "sol": 0
+            })
+
+            const tokenData = ref([])
+
+            const payData = ref({
+                "mint": "",
+                "amount": "",
+            })
 
             const openAddTasks = () => {
                 addTasksVisible.value = true
@@ -317,32 +361,37 @@
                 window.open(url, "_blank");
             }
 
-            const options = [
-                {
-                    value: 'Option1',
-                    label: 'Option1',
-                },
-                {
-                    value: 'Option2',
-                    label: 'Option2',
-                },
-                {
-                    value: 'Option3',
-                    label: 'Option3',
-                },
-                {
-                    value: 'Option4',
-                    label: 'Option4',
-                },
-                {
-                    value: 'Option5',
-                    label: 'Option5',
-                },
-            ]
+            const getWallet = () => {
+                axios.get('/api/get_wallet')
+                    .then(function (response) {
+                        console.log(response);
+                        wallet.value = response.data
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+            }
+            const getToken = () => {
+                axios.get('/api/get_token')
+                    .then(function (response) {
+                        console.log(response);
+                        tokenData.value = response.data
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+            }
+
+
+            const selectToken = (value) => {
+                payData.value = value
+            }
             // 刷新时执行
             getConfig()
             getTasks()
             getTasksLog()
+            getWallet()
+            getToken()
             return {
                 configForm,
                 getConfig,
@@ -359,8 +408,11 @@
                 open_solscan,
                 open_dexscreener,
                 tasksLogData,
-                pubkey,
-                options
+                tokenData,
+                getWallet,
+                wallet,
+                selectToken,
+                payData
             }
         }
     }).use(ElementPlus).mount('#app')
