@@ -65,3 +65,11 @@ class Wallet:
         if not isinstance(mint, str):
             mint = str(mint)
         return mint in self.token_data
+
+    def get_no_balance_account(self):
+        account_list = []
+        for nn, data in self.token_data.items():
+            if int(data.amount) == 0:
+                print(data.address, data.amount)
+                account_list.append(data.address)
+        return account_list

@@ -15,24 +15,25 @@ import solders.system_program as sp
 
 
 async def test1():
-    l = ""
     wallet = Wallet("2CpVUWrFP51Njq441oJAbe2dLcSPMhXkcc2Wu1GVfVQ5vaHp8c5SQ8mS4AXKdv4FTpQAyb7mnQW3zsR1ReZyX8s")
     await wallet.update_token_accounts()
-    for i, v in wallet.token_data.items():
-        print(i, v.address, v.amount)
+
+    no_account = wallet.get_no_balance_account()
     try:
         recent_blockhash = GlobalVariables.SolaraClient.blockhash_cache.get()
     except:
         recent_blockhash = (await GlobalVariables.SolaraClient.get_latest_blockhash()).value
     instructions = []
-    instructions.append(close_account(
-        CloseAccountParams(
-            account=Pubkey.from_string("48rtm71FwApU8ZnZHztUKnf3g5hziFtA3pU7GEQwvjtt"),
-            dest=wallet.pubkey,
-            owner=wallet.pubkey,
-            program_id=TOKEN_PROGRAM_ID,
-        )
-    ))
+    #
+    for account in no_account:
+        instructions.append(close_account(
+            CloseAccountParams(
+                account=account,
+                dest=wallet.pubkey,
+                owner=wallet.pubkey,
+                program_id=TOKEN_PROGRAM_ID,
+            )
+        ))
     compiled_message = MessageV0.try_compile(
         wallet.pubkey,
         instructions,
@@ -47,7 +48,7 @@ async def test1():
         txn_signature,
         Confirmed,
     )
-    print("等待结果", txn_signature)
+    print("完成", txn_signature)
 
 
 if __name__ == '__main__':

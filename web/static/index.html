@@ -150,6 +150,7 @@
                         </div>
                     </template>
                     <div class="text item">
+                        <div>钱包地址: {{pubkey}}</div>
                     </div>
                 </el-card>
             </el-col>
@@ -176,7 +177,7 @@
 </body>
 
 <script>
-    const {createApp, ref, reactive} = Vue
+    const {createApp, ref} = Vue
 
     createApp({
         setup() {
@@ -204,6 +205,8 @@
                 "baseMint": "",
                 "amount": 0.01
             })
+
+            const pubkey = ref("")
 
             const openAddTasks = () => {
                 addTasksVisible.value = true
@@ -324,7 +327,8 @@
                 deleteTasksLog,
                 open_solscan,
                 open_dexscreener,
-                tasksLogData
+                tasksLogData,
+                pubkey
             }
         }
     }).use(ElementPlus).mount('#app')

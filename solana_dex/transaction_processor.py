@@ -7,9 +7,6 @@ from settings.global_variables import GlobalVariables
 from solana_dex.raydium.models import ApiPoolInfo
 from solana_dex.raydium.swap_core import SwapCore
 
-# 测试购买
-test_num = False
-
 exclude_buy_set = set()
 
 
@@ -38,14 +35,10 @@ class TransactionProcessor:
                     return
             # 避免重复购买
             exclude_buy_set.add(api_pool_info.baseMint)
-            # 测试方法仅购买一次
-            global test_num
-            if test_num:
-                return
             wallet = GlobalVariables.default_wallet
             swap = SwapCore(wallet, api_pool_info, AppConfig.MICROLAMPORTS)
             if task_info:
-                amount = task_info.amount
+                amount = float(task_info.amount)
             else:
                 amount = AppConfig.AUTO_QUOTE_AMOUNT
             buy = await send_with_retry(lambda: swap.buy(api_pool_info.baseMint, amount),
@@ -54,7 +47,6 @@ class TransactionProcessor:
             exclude_buy_set.discard(api_pool_info.baseMint)
             if not buy:
                 return False
-            test_num = True
             if not AppConfig.AUTO_SELL_STATUS:
                 return
             # 等待售出

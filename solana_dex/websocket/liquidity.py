@@ -36,7 +36,6 @@ async def check_raydium_liquidity(quote_vault):
     try:
         qvalue = await GlobalVariables.SolaraClient.get_balance(quote_vault)
         sol = qvalue.value / LAMPORTS_PER_SOL
-        print(quote_vault, sol)
         if sol > AppConfig.POOL_SIZE:
             return True
         else:
@@ -48,7 +47,6 @@ async def check_raydium_liquidity(quote_vault):
 async def check_mint_status(mint: Pubkey):
     resp = await GlobalVariables.SolaraClient.get_account_info(mint)
     mint_info = MINT_LAYOUT.parse(resp.value.data)
-    print(mint, mint_info.mintAuthorityOption, mint_info.freezeAuthorityOption == 0)
     if mint_info.mintAuthorityOption == 0 and mint_info.freezeAuthorityOption == 0:
         return True
     else:
@@ -89,10 +87,8 @@ async def parse_liqudity_data(data):
                     if any(result is False for result in results):
                         logger.info(f"{pool_state.baseMint} 验证未通过")
                         return False
-                    else:
-                        asyncio.create_task(TransactionProcessor.append_buy(pool_info))
-                        return True
-                asyncio.create_task(TransactionProcessor.append_buy(pool_info))
+                if AppConfig.AUTO_TRADING:
+                    asyncio.create_task(TransactionProcessor.append_buy(pool_info))
             else:
                 logger.warning(
                     f"监听到 {pool_state.baseMint} 流动性变化, 运行时间 {round(run_timestamp - poolOpenTime, 3)}, 市场匹配失败")
