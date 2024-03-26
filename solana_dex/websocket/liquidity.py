@@ -104,7 +104,7 @@ async def run():
             async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT, max_queue=None) as wss:
                 await wss.program_subscribe(
                     RAYDIUM_LIQUIDITY_POOL_V4, Processed, "base64",
-                    data_slice=DataSliceOpts(length=752, offset=0),
+                    # data_slice=DataSliceOpts(length=752, offset=0),
                     filters=[
                         MemcmpOpts(offset=432, bytes="So11111111111111111111111111111111111111112"),
                         MemcmpOpts(offset=560, bytes="srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"),

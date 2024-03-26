@@ -68,7 +68,7 @@ class SwapCore:
                 "pubkey": self.wallet.pubkey,
                 "baseMint": mint,
                 "tx": txn_signature,
-                "amount": amount,
+                "amount": str(amount),
                 "status": "购买任务",
                 "result": "完成"
             }))
@@ -93,7 +93,7 @@ class SwapCore:
                         "pubkey": self.wallet.pubkey,
                         "baseMint": mint,
                         "tx": txn_signature,
-                        "amount": amount,
+                        "amount": str(token_data.uiAmount),
                         "status": "出售任务",
                         "result": "完成"
                     }))

@@ -15,7 +15,7 @@ class TasksLog(Model):
     pubkey = fields.CharField(max_length=50)
     baseMint = fields.CharField(max_length=50)
     tx = fields.CharField(max_length=255)
-    amount = fields.IntField()
+    amount = fields.CharField(max_length=255)
     status = fields.CharField(max_length=50)
     result = fields.CharField(max_length=255)
     updatedAt = fields.DatetimeField(auto_now=True)
