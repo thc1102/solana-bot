@@ -88,7 +88,7 @@
                         <div class="card-header">
                             <el-space wrap>
                                 <span>快速交易</span>
-                                <el-button @click="" size="small" type="warning">
+                                <el-button size="small" type="warning" @click="refreshWallet">
                                     刷新
                                 </el-button>
                             </el-space>
@@ -116,16 +116,16 @@
                                     <el-input v-model="payData.mint" placeholder="请输入代币的地址" clearable/>
                                 </el-form-item>
                                 <el-form-item label="买卖数量">
-                                    <el-input v-model="payData.amount" placeholder="请输入代币的地址" clearable/>
+                                    <el-input v-model="payData.amount" placeholder="请输入代币的数量" clearable/>
                                 </el-form-item>
                                 <el-form-item label="快捷操作">
-                                    <el-button type="primary" @click="">
+                                    <el-button type="primary" @click="buy">
                                         快速买入
                                     </el-button>
-                                    <el-button type="danger" @click="">
+                                    <el-button type="danger" @click="sell">
                                         快速卖出
                                     </el-button>
-                                    <el-button type="warning" @click="">
+                                    <el-button type="warning" @click="cloneAccount">
                                         快速注销空账户
                                     </el-button>
                                 </el-form-item>
@@ -147,7 +147,7 @@
                         </div>
                     </template>
                     <div class="text item">
-                        <el-table :data="tasksData" max-height="450">
+                        <el-table :data="tasksData" max-height="500">
                             <el-table-column prop="baseMint" label="baseMint"></el-table-column>
                             <el-table-column prop="amount" label="amount"></el-table-column>
                             <el-table-column prop="updatedAt" label="updatedAt"></el-table-column>
@@ -173,7 +173,7 @@
                         </div>
                     </template>
                     <div class="text item">
-                        <el-table :data="tasksLogData" max-height="450">
+                        <el-table :data="tasksLogData" max-height="500">
                             <el-table-column prop="baseMint" label="baseMint"></el-table-column>
                             <el-table-column prop="amount" label="amount"></el-table-column>
                             <el-table-column prop="status" label="status"></el-table-column>
@@ -220,7 +220,7 @@
 
 <script>
     const {createApp, ref} = Vue
-
+    const {ElMessage, ElNotification} = ElementPlus;
     createApp({
         setup() {
             const configForm = ref({
@@ -250,7 +250,7 @@
 
             const wallet = ref({
                 "pubkey": "",
-                "sol": 0
+                "sol": ""
             })
 
             const tokenData = ref([])
@@ -264,7 +264,7 @@
                 addTasksVisible.value = true
                 addTasksData.value = {
                     "baseMint": "",
-                    "amount": 0.01
+                    "amount": ""
                 }
             }
 
@@ -284,6 +284,7 @@
                     .then(function (response) {
                         // 请求成功时的处理
                         console.log(response);
+                        ElMessage("程序配置信息已保存")
                         getConfig()
                     })
                     .catch(function (error) {
@@ -382,6 +383,76 @@
                     });
             }
 
+            const buy = () => {
+                const data = payData.value
+                if (data.mint.length === 0) {
+                    ElMessage("代币地址不能为空")
+                    return
+                }
+                axios.post('/api/buy', data)
+                    .then(function (response) {
+                        // 请求成功时的处理
+                        console.log(response);
+                        ElNotification({
+                            title: '购买通知',
+                            message: response.data
+                        })
+                    })
+                    .catch(function (error) {
+                        // 请求失败时的处理
+                        console.error(error);
+                        ElNotification({
+                            title: '购买通知',
+                            message: "购买异常"
+                        })
+                    });
+            }
+            const cloneAccount = () => {
+                axios.get('/api/clone_account')
+                    .then(function (response) {
+                        console.log(response);
+                        ElNotification({
+                            title: '任务通知',
+                            message: response.data
+                        })
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                        ElNotification({
+                            title: '任务通知',
+                            message: "任务下发异常"
+                        })
+                    });
+            }
+            const sell = () => {
+                const data = payData.value
+                if (data.mint.length === 0) {
+                    ElMessage("代币地址不能为空")
+                    return
+                }
+                axios.post('/api/sell', data)
+                    .then(function (response) {
+                        // 请求成功时的处理
+                        console.log(response);
+                        ElNotification({
+                            title: '出售通知',
+                            message: response.data
+                        })
+                    })
+                    .catch(function (error) {
+                        // 请求失败时的处理
+                        console.error(error);
+                        ElNotification({
+                            title: '出售通知',
+                            message: "出售异常"
+                        })
+                    });
+            }
+
+            const refreshWallet = () => {
+                getWallet()
+                getToken()
+            }
 
             const selectToken = (value) => {
                 payData.value = value
@@ -392,6 +463,7 @@
             getTasksLog()
             getWallet()
             getToken()
+            setInterval(getTasksLog, 1000);
             return {
                 configForm,
                 getConfig,
@@ -412,7 +484,11 @@
                 getWallet,
                 wallet,
                 selectToken,
-                payData
+                payData,
+                refreshWallet,
+                buy,
+                sell,
+                cloneAccount
             }
         }
     }).use(ElementPlus).mount('#app')

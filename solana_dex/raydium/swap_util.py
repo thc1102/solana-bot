@@ -1,3 +1,5 @@
+from typing import Union
+
 import solders.system_program as sp
 import spl.token.instructions as spl_token
 from solana.rpc.async_api import AsyncClient
@@ -15,7 +17,7 @@ from spl.token.instructions import close_account, CloseAccountParams, create_ass
 
 from solana_dex.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, OPENBOOK_MARKET, SOL_MINT_ADDRESS
 from solana_dex.layout.raydium_layout import ROUTE_DATA_LAYOUT
-from solana_dex.raydium.models import ApiPoolInfo
+from solana_dex.raydium.models import ApiPoolInfo, WebPoolInfo
 
 
 def make_swap_instruction(
@@ -23,7 +25,7 @@ def make_swap_instruction(
         token_account_in: Pubkey,
         token_account_out: Pubkey,
         owner: Pubkey,
-        pool_info: ApiPoolInfo
+        pool_info: Union[ApiPoolInfo, WebPoolInfo]
 ) -> Instruction:
     keys = [
         AccountMeta(pubkey=TOKEN_PROGRAM_ID, is_signer=False, is_writable=False),
@@ -60,7 +62,7 @@ class SwapTransactionBuilder:
     def __init__(
             self,
             client: AsyncClient,
-            pool: ApiPoolInfo,
+            pool: Union[ApiPoolInfo, WebPoolInfo],
             payer: Keypair,
             unit_price: int = 25000,
             unit_budget: int = 600000,
@@ -206,3 +208,37 @@ class SwapTransactionBuilder:
                 self.payer.pubkey(), self.payer.pubkey(), mint
             )
         )
+
+
+class AccountTransactionBuilder:
+    def __init__(self, client: AsyncClient, payer: Keypair):
+        self.client = client
+        self.payer = payer
+        self.TOKEN_PROGRAM_ID = TOKEN_PROGRAM_ID
+        self.instructions = []
+
+    def append_close_account(self, account: Pubkey):
+        self.instructions.append(
+            close_account(
+                CloseAccountParams(
+                    account=account,
+                    dest=self.payer.pubkey(),
+                    owner=self.payer.pubkey(),
+                    program_id=self.TOKEN_PROGRAM_ID,
+                )
+            )
+        )
+
+    async def compile_versioned_transaction(self):
+        try:
+            recent_blockhash = self.client.blockhash_cache.get()
+        except:
+            recent_blockhash = (await self.client.get_latest_blockhash()).value
+        compiled_message = MessageV0.try_compile(
+            self.payer.pubkey(),
+            self.instructions,
+            [],  # lookup tables
+            recent_blockhash.blockhash,
+        )
+        keypairs = [self.payer]
+        return VersionedTransaction(compiled_message, keypairs)

@@ -41,14 +41,14 @@ async def test1():
         recent_blockhash.blockhash,
     )
     keypairs = [wallet.keypair]
-    transaction = VersionedTransaction(compiled_message, keypairs)
-    txn_signature = (await GlobalVariables.SolaraClient.send_transaction(transaction)).value
-    print("开始发送", txn_signature)
-    resp = await SolanaRPCClient.confirm_transaction(
-        txn_signature,
-        Confirmed,
-    )
-    print("完成", txn_signature)
+    # transaction = VersionedTransaction(compiled_message, keypairs)
+    # txn_signature = (await GlobalVariables.SolaraClient.send_transaction(transaction)).value
+    # print("开始发送", txn_signature)
+    # resp = await SolanaRPCClient.confirm_transaction(
+    #     txn_signature,
+    #     Confirmed,
+    # )
+    # print("完成", txn_signature)
 
 
 if __name__ == '__main__':

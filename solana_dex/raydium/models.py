@@ -121,3 +121,25 @@ class ApiPoolInfo:
             f"  marketEventQueue: {self.marketEventQueue}\n"
             f"  lookupTableAccount: {self.lookupTableAccount}\n"
         )
+
+
+class WebPoolInfo:
+    def __init__(
+            self,
+            data: dict
+    ):
+        self.id = Pubkey.from_string(data.get("id"))
+        self.baseMint = Pubkey.from_string(data.get("baseMint"))
+        self.quoteMint = Pubkey.from_string(data.get("quoteMint"))
+        self.authority = RAY_AUTHORITY_V4
+        self.openOrders = Pubkey.from_string(data.get("openOrders"))
+        self.targetOrders = Pubkey.from_string(data.get("targetOrders"))
+        self.baseVault = Pubkey.from_string(data.get("baseVault"))
+        self.quoteVault = Pubkey.from_string(data.get("quoteVault"))
+        self.marketId = Pubkey.from_string(data.get("marketId"))
+        self.marketBids = Pubkey.from_string(data.get("marketBids"))
+        self.marketAsks = Pubkey.from_string(data.get("marketAsks"))
+        self.marketBaseVault = Pubkey.from_string(data.get("marketBaseVault"))
+        self.marketQuoteVault = Pubkey.from_string(data.get("marketQuoteVault"))
+        self.marketAuthority = Pubkey.from_string(data.get("marketAuthority"))
+        self.marketEventQueue = Pubkey.from_string(data.get("marketEventQueue"))

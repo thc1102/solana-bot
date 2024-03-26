@@ -8,6 +8,7 @@ from orm.crud import tasks
 from orm.models.tasks import TasksLog
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
+from solana_dex.transaction_processor import TransactionProcessor
 from utils.public import update_snipe_list
 from web.utils import update_object, custom_datetime_serializer
 
@@ -38,6 +39,11 @@ class TasksData(BaseModel):
 class DeleteData(BaseModel):
     id: int = None
     ids: int = None
+
+
+class payDate(BaseModel):
+    mint: str
+    amount: float
 
 
 @router.get("/get_config")
@@ -125,3 +131,31 @@ async def get_token():
             }
         )
     return account_list
+
+
+@router.post("/buy")
+async def buy(data: payDate):
+    if data.amount <= 0:
+        return "输入的数量不合法"
+    status, msg = await TransactionProcessor.web_buy(data.mint, data.amount)
+    if status:
+        return "购买任务已下发"
+    else:
+        return msg
+
+
+@router.post("/sell")
+async def sell(data: payDate):
+    if data.amount <= 0:
+        return "输入的数量不合法"
+    status, msg = await TransactionProcessor.web_sell(data.mint, data.amount)
+    if status:
+        return "出售任务已下发"
+    else:
+        return msg
+
+
+@router.get("/clone_account")
+async def clone_account():
+    asyncio.create_task(TransactionProcessor.web_clone_account())
+    return "清理空余额账户任务已创建"

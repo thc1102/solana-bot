@@ -15,7 +15,7 @@ lock = asyncio.Lock()
 
 
 class TokenAccountData:
-    def __init__(self, address, mint, amount, ui_amount):
+    def __init__(self, address, mint, amount, ui_amount, decimals):
         # 钱包中的代币地址
         self.address = address
         # 代币的Mint
@@ -24,6 +24,8 @@ class TokenAccountData:
         self.amount = amount
         # 带小数点的余额
         self.uiAmount = ui_amount
+        # 小数点转换位数
+        self.decimals = decimals
 
 
 class Wallet:
@@ -48,7 +50,8 @@ class Wallet:
                 mint = item.account.data.parsed["info"]["mint"]
                 amount = item.account.data.parsed["info"]["tokenAmount"]["amount"]
                 ui_amount = item.account.data.parsed["info"]["tokenAmount"]["uiAmount"]
-                token_data[mint] = TokenAccountData(address, mint, amount, ui_amount)
+                decimals = item.account.data.parsed["info"]["tokenAmount"]["decimals"]
+                token_data[mint] = TokenAccountData(address, mint, amount, ui_amount, decimals)
             # 加锁保证并发不会影响
             async with lock:
                 self.token_data = token_data

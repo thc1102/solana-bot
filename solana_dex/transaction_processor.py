@@ -2,10 +2,11 @@ import asyncio
 
 from loguru import logger
 
+from orm.crud.raydium import get_pool_by_mint
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
-from solana_dex.raydium.models import ApiPoolInfo
-from solana_dex.raydium.swap_core import SwapCore
+from solana_dex.raydium.models import ApiPoolInfo, WebPoolInfo
+from solana_dex.raydium.swap_core import SwapCore, AccountCore
 
 exclude_buy_set = set()
 
@@ -64,3 +65,32 @@ class TransactionProcessor:
         await send_with_retry(lambda: swap.sell(api_pool_info.baseMint),
                               max_attempts=AppConfig.MAX_SELL_RETRIES,
                               delay=0.2)
+
+    @staticmethod
+    async def web_buy(base_mint: str, amount: float):
+        db_pool_info = await get_pool_by_mint(base_mint)
+        if not db_pool_info:
+            return False, "获取流动池信息失败"
+        wallet = GlobalVariables.default_wallet
+        pool_info = WebPoolInfo(vars(db_pool_info))
+        swap = SwapCore(wallet, pool_info, AppConfig.MICROLAMPORTS)
+        asyncio.create_task(swap.buy(pool_info.baseMint, amount))
+        return True, "ok"
+
+    @staticmethod
+    async def web_sell(base_mint: str, amount: float):
+        db_pool_info = await get_pool_by_mint(base_mint)
+        if not db_pool_info:
+            return False, "获取流动池信息失败"
+        wallet = GlobalVariables.default_wallet
+        pool_info = WebPoolInfo(vars(db_pool_info))
+        swap = SwapCore(wallet, pool_info, AppConfig.MICROLAMPORTS)
+        token_data = wallet.get_token_accounts(base_mint)
+        amount = int(amount * (10 ** token_data.decimals))
+        asyncio.create_task(swap.sell(pool_info.baseMint, amount))
+        return True, "ok"
+
+    @staticmethod
+    async def web_clone_account():
+        account = AccountCore(GlobalVariables.default_wallet)
+        await account.clone_no_balance_account()
