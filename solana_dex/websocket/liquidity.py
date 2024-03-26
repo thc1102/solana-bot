@@ -72,7 +72,7 @@ async def parse_liqudity_data(data):
                 asyncio.create_task(create_pool(data.result.value.pubkey, pool_info.to_dict()))
                 # 狙击模式优先
                 if AppConfig.USE_SNIPE_LIST:
-                    tasks_info = GlobalVariables.snipe_list.get(pool_state.baseMint)
+                    tasks_info = GlobalVariables.snipe_list.get(str(pool_state.baseMint))
                     if tasks_info:
                         asyncio.create_task(TransactionProcessor.append_buy(pool_info, tasks_info))
                         return False

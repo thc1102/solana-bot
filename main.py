@@ -1,6 +1,8 @@
 import asyncio
 import sys
 
+from utils.public import update_snipe_list
+
 try:
     import uvloop
 
@@ -42,6 +44,8 @@ async def run():
         # 启动websocket监控
         asyncio.create_task(openbook.run())
         asyncio.create_task(liquidity.run())
+        # 初始化狙击列表
+        asyncio.create_task(update_snipe_list())
         # 等待结束指令
         await GlobalVariables.stop_event.wait()
     finally:
