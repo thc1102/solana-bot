@@ -111,6 +111,22 @@ class SwapTransactionBuilder:
             )
         )
 
+    async def wsol_append_buy(self, amount_in: int, check_associated_token_account_exists=True):
+        # 前提必须存在wsol代币地址
+        self.append_set_compute_budget(self.unit_price, self.unit_budget)
+        source = get_associated_token_address(self.payer.pubkey(), SOL_MINT_ADDRESS)
+        dest = get_associated_token_address(self.payer.pubkey(), self.baseMint)
+        if check_associated_token_account_exists:
+            await self.append_if_not_exists_create_associated_token_account(self.baseMint)
+        self.append_swap(amount_in, source, dest)
+
+    async def wsol_append_sell(self, amount_in: int):
+        # 前提必须存在wsol代币地址
+        self.append_set_compute_budget(self.unit_price, self.unit_budget)
+        source = get_associated_token_address(self.payer.pubkey(), self.baseMint)
+        dest = get_associated_token_address(self.payer.pubkey(), SOL_MINT_ADDRESS)
+        self.append_swap(amount_in, source, dest)
+
     async def append_sell(self, amount_in: int):
         pay_for_rent = await AsyncToken.get_min_balance_rent_for_exempt_for_account(self.client)
         self.append_set_compute_budget(self.unit_price, self.unit_budget)
