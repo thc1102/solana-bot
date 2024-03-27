@@ -38,18 +38,36 @@ async def get_data_list():
     return pool_data
 
 
+async def get_keys_count(redis, pattern):
+    count = 0
+    cursor = b'0'  # 初始游标为 0
+
+    while cursor:
+        cursor, keys = await redis.scan(cursor, match=pattern, count=10000)
+        count += len(keys)
+
+    return count
+
+
 async def test():
     r = await redis.from_url("redis://localhost")
-    t = time.time()
-    async with r.pipeline(transaction=True) as pipe:
-        for key, value in (await get_data_list()).items():
-            pipe.set(f"pool:{key}", pickle.dumps(value))
-        await pipe.execute()
-    print(time.time() - t)
+    # t = time.time()
+    # async with r.pipeline(transaction=True) as pipe:
+    #     for key, value in (await get_data_list()).items():
+    #         pipe.set(f"pool:{key}", pickle.dumps(value))
+    #     await pipe.execute()
+    # print(time.time() - t)
     t = time.time()
     pool = await r.get("pool:ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82")
     if pool:
         print(pickle.loads(pool).id)
+    print(time.time() - t)
+    t = time.time()
+    keys_count = await get_keys_count(r, "pool:*")
+    print(keys_count)
+    print(time.time() - t)
+    t = time.time()
+    await r.setnx("admin", "admin")
     print(time.time() - t)
 
 
