@@ -1,16 +1,14 @@
 import asyncio
 
-from solders.pubkey import Pubkey
-from spl.token._layouts import MINT_LAYOUT
-
-from solana_dex.solana.solana_client import SolanaRPCClient
+import redis.asyncio as redis
 
 
-async def test1():
-    resp = await SolanaRPCClient.get_account_info(Pubkey.from_string("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82"))
-    MINT_LAYOUT.parse(resp.value.data)
-    print(resp)
+async def main():
+    client = redis.Redis()
+    print(f"Ping successful: {await client.ping()}")
+    await client.aclose()
+    pass
 
 
-if __name__ == '__main__':
-    asyncio.run(test1())
+if __name__ == "__main__":
+    asyncio.run(main())
