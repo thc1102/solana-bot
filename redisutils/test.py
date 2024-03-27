@@ -1,5 +1,6 @@
 import asyncio
 import json
+import pickle
 import time
 import redis.asyncio as redis
 
@@ -37,23 +38,18 @@ async def get_data_list():
     return pool_data
 
 
-async def write_to_redis(redis, data):
-    async with redis.pipeline(transaction=True) as pipe:
-        for key, value in data.items():
-            pipe.set(key, value)
-        return await pipe.execute()
-
-
 async def test():
     r = await redis.from_url("redis://localhost")
     t = time.time()
     async with r.pipeline(transaction=True) as pipe:
         for key, value in (await get_data_list()).items():
-            pipe.set(f"pool:{key}", json.dumps(value.__dict__))
+            pipe.set(f"pool:{key}", pickle.dumps(value))
         await pipe.execute()
     print(time.time() - t)
     t = time.time()
-    print(await r.get("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82"))
+    pool = await r.get("pool:ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82")
+    if pool:
+        print(pickle.loads(pool).id)
     print(time.time() - t)
 
 
