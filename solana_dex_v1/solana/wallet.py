@@ -10,6 +10,7 @@ from solders.keypair import Keypair
 
 from solana_dex.common.constants import TOKEN_PROGRAM_ID
 from solana_dex.solana.solana_client import SolanaRPCClient
+from solana_dex_v1.utils.client_utils import AsyncClientFactory
 
 lock = asyncio.Lock()
 
@@ -40,21 +41,22 @@ class Wallet:
 
     async def update_token_accounts(self, commitment: Optional[Commitment] = Finalized):
         try:
-            balance = await SolanaRPCClient.get_token_accounts_by_owner_json_parsed(self.pubkey,
-                                                                                    TokenAccountOpts(
-                                                                                        program_id=TOKEN_PROGRAM_ID),
-                                                                                    commitment)
-            token_data = {}
-            for item in balance.value:
-                address = item.pubkey
-                mint = item.account.data.parsed["info"]["mint"]
-                amount = item.account.data.parsed["info"]["tokenAmount"]["amount"]
-                ui_amount = item.account.data.parsed["info"]["tokenAmount"]["uiAmount"]
-                decimals = item.account.data.parsed["info"]["tokenAmount"]["decimals"]
-                token_data[mint] = TokenAccountData(address, mint, amount, ui_amount, decimals)
-            # 加锁保证并发不会影响
-            async with lock:
-                self.token_data = token_data
+            async with AsyncClientFactory() as client:
+                balance = await client.get_token_accounts_by_owner_json_parsed(self.pubkey,
+                                                                                        TokenAccountOpts(
+                                                                                            program_id=TOKEN_PROGRAM_ID),
+                                                                                        commitment)
+                token_data = {}
+                for item in balance.value:
+                    address = item.pubkey
+                    mint = item.account.data.parsed["info"]["mint"]
+                    amount = item.account.data.parsed["info"]["tokenAmount"]["amount"]
+                    ui_amount = item.account.data.parsed["info"]["tokenAmount"]["uiAmount"]
+                    decimals = item.account.data.parsed["info"]["tokenAmount"]["decimals"]
+                    token_data[mint] = TokenAccountData(address, mint, amount, ui_amount, decimals)
+                # 加锁保证并发不会影响
+                async with lock:
+                    self.token_data = token_data
         except:
             return False
         return True

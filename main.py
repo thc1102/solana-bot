@@ -15,8 +15,8 @@ from tortoise import Tortoise
 
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
-from solana_dex.solana.wallet import Wallet
-from solana_dex.websocket import openbook, liquidity
+from solana_dex_v1.solana.wallet import Wallet
+from solana_dex_v1.websocket import openbook, liquidity
 
 
 async def init_db():

@@ -1,55 +1,29 @@
 import asyncio
+import pickle
 
-from solana.rpc.commitment import Confirmed
-from solders.message import MessageV0
-from solders.pubkey import Pubkey
-from solders.transaction import VersionedTransaction
-from spl.token.instructions import close_account, CloseAccountParams
-
-from settings.global_variables import GlobalVariables
-from solana_dex.common.constants import TOKEN_PROGRAM_ID, LAMPORTS_PER_SOL
-from solana_dex.layout.solana_layout import MINT_LAYOUT
-from solana_dex.solana.solana_client import SolanaRPCClient
-from solana_dex.solana.wallet import Wallet
-import solders.system_program as sp
+from solana_dex_v1.model.pool import PoolInfo
+from solana_dex_v1.utils.client_utils import AsyncClientFactory
 
 
-async def test1():
-    wallet = Wallet("2CpVUWrFP51Njq441oJAbe2dLcSPMhXkcc2Wu1GVfVQ5vaHp8c5SQ8mS4AXKdv4FTpQAyb7mnQW3zsR1ReZyX8s")
-    await wallet.update_token_accounts()
+async def demo():
+    data = {'id': 'DjUku8omwqpmMdkv9vQRbndR9zaZmsGdSadT9kTLGMb',
+            'baseMint': 'A1puJVQjWaf4J5Wed3Seh21JZaRrw3nGCq6FxP2uKRfk',
+            'quoteMint': 'So11111111111111111111111111111111111111112',
+            'authority': '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1',
+            'openOrders': '7pGxg2MH5ECzEickY82V3i56yQq8Y1GQDoayDWPihHMx',
+            'targetOrders': '6Wk5AvJCWaXpBbNe99ecPXPyryq1cdWu76wRcNXcDs1y',
+            'baseVault': 'FCGNaa2WaLaMv9eBUCrNDW4MZQVWFgdPj5mcfixgz3x1',
+            'quoteVault': 'm5dmTdQaeAxPTy7L1oRie6oHUu6y7cNZC1QeYCikXnu',
+            'marketId': '6nzQwDCWkrWGjjtScT3TTthh9Lfntu49HDnLzB1wyryg',
+            'marketBids': 'ACoRrWi6gK9hP6qMVba1KBtGqj9Pr4V6tXd19mk1Zg3M',
+            'marketAsks': 'B3EgRpN6XNeXPEfhRzvoTuaEZyTVHsron34ZH1ZdzaJa',
+            'marketBaseVault': 'Hyontq2ubBmFDktMK9ZbHK53tf1866S1kgRVgrVMZouW',
+            'marketQuoteVault': '3Rgwci7JexW3Pv5UrEXK7b9gk1ZCj1Uz8aBAZWWfnYqB',
+            'marketAuthority': 'GiWvn8PEm6WTeoFWos2anRdQ7mYk2DbmcHfjHewFxEkx',
+            'marketEventQueue': 'BUv1GDCRhLJPhjzLR4dQ3Ddf3zF5kipXhytu7JSHPwj6', 'poolOpenTime': 1711586567}
 
-    no_account = wallet.get_no_balance_account()
-    try:
-        recent_blockhash = GlobalVariables.SolaraClient.blockhash_cache.get()
-    except:
-        recent_blockhash = (await GlobalVariables.SolaraClient.get_latest_blockhash()).value
-    instructions = []
-    #
-    for account in no_account:
-        instructions.append(close_account(
-            CloseAccountParams(
-                account=account,
-                dest=wallet.pubkey,
-                owner=wallet.pubkey,
-                program_id=TOKEN_PROGRAM_ID,
-            )
-        ))
-    compiled_message = MessageV0.try_compile(
-        wallet.pubkey,
-        instructions,
-        [],  # lookup tables
-        recent_blockhash.blockhash,
-    )
-    keypairs = [wallet.keypair]
-    # transaction = VersionedTransaction(compiled_message, keypairs)
-    # txn_signature = (await GlobalVariables.SolaraClient.send_transaction(transaction)).value
-    # print("开始发送", txn_signature)
-    # resp = await SolanaRPCClient.confirm_transaction(
-    #     txn_signature,
-    #     Confirmed,
-    # )
-    # print("完成", txn_signature)
+    aaaa = pickle.dumps(PoolInfo(data))
+    print(pickle.loads(aaaa).__dict__)
 
 
-if __name__ == '__main__':
-    asyncio.run(test1())
+asyncio.run(demo())
