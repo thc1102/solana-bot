@@ -8,7 +8,7 @@ from solders.pubkey import Pubkey
 from orm.crud.tasks import create_tasks_log
 from settings.global_variables import GlobalVariables
 from solana_dex.solana.wallet import Wallet
-from solana_dex_v1.common.constants import LAMPORTS_PER_SOL
+from solana_dex_v1.common.constants import LAMPORTS_PER_SOL, SOL_MINT_ADDRESS
 from solana_dex_v1.model.pool import PoolInfo
 from solana_dex_v1.raydium.swap_utils import SwapTransactionBuilder, AccountTransactionBuilder
 
@@ -153,3 +153,11 @@ class SwapCore:
             return txn_signature
         except Exception as e:
             logger.error(e)
+
+    async def to_wsol(self, amount: float):
+        wsol_status = self.wallet.get_token_accounts(SOL_MINT_ADDRESS)
+        if not wsol_status:
+            pass
+
+    async def clone_wsol(self)
+        pass
