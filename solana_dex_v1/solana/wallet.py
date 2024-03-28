@@ -36,16 +36,17 @@ class Wallet:
         self.token_data = {}
 
     async def get_sol_balance(self):
-        balance_resp = await SolanaRPCClient.get_balance(self.pubkey)
+        async with AsyncClientFactory() as client:
+            balance_resp = await client.get_balance(self.pubkey)
         return balance_resp.value / 10 ** 9
 
     async def update_token_accounts(self, commitment: Optional[Commitment] = Finalized):
         try:
             async with AsyncClientFactory() as client:
                 balance = await client.get_token_accounts_by_owner_json_parsed(self.pubkey,
-                                                                                        TokenAccountOpts(
-                                                                                            program_id=TOKEN_PROGRAM_ID),
-                                                                                        commitment)
+                                                                               TokenAccountOpts(
+                                                                                   program_id=TOKEN_PROGRAM_ID),
+                                                                               commitment)
                 token_data = {}
                 for item in balance.value:
                     address = item.pubkey
@@ -55,8 +56,8 @@ class Wallet:
                     decimals = item.account.data.parsed["info"]["tokenAmount"]["decimals"]
                     token_data[mint] = TokenAccountData(address, mint, amount, ui_amount, decimals)
                 # 加锁保证并发不会影响
-                async with lock:
-                    self.token_data = token_data
+            async with lock:
+                self.token_data = token_data
         except:
             return False
         return True

@@ -86,7 +86,9 @@ async def parse_liqudity_data(data):
             logger.info(
                 f"监听到 {base_mint} 流动性变化 匹配成功 开放时间 {pool_open_time_str} 耗时 {matching_time:.3f}")
             if AppConfig.AUTO_TRADING:
-                if time.time() - pool_open_time < AppConfig.RUN_LP_TIME:
+                if now_timestamp - pool_open_time < AppConfig.RUN_LP_TIME:
+                    if now_timestamp - pool_open_time < 0:
+                        exclude_address_set.discard(liqudity_id)
                     # 流动池检测
                     if AppConfig.POOL_SIZE != 0:
                         task_list.append(check_raydium_liquidity(Pubkey.from_string(pool_info.quoteVault)))

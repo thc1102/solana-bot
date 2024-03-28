@@ -23,10 +23,6 @@ class AsyncClientFactory:
         self._running = False
         if self._refresh_task:
             self._refresh_task.cancel()
-            try:
-                await self._refresh_task
-            except asyncio.CancelledError:
-                pass
         return await self._client.close()
 
     async def _refresh_blockhash(self):
