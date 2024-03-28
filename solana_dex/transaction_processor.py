@@ -3,7 +3,7 @@ import pickle
 
 from loguru import logger
 
-from db.redis_utils import RedisFactory
+from utils.redis_utils import RedisFactory
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
 from solana_dex.model.pool import PoolInfo
@@ -32,7 +32,6 @@ class TransactionProcessor:
     @staticmethod
     async def append_buy(pool_info: PoolInfo, task_info=None, check_buy_repeat: bool = True):
         try:
-
             if check_buy_repeat:
                 if pool_info.baseMint in exclude_buy_set:
                     return
@@ -56,7 +55,7 @@ class TransactionProcessor:
                 # 等待售出
                 await asyncio.sleep(AppConfig.AUTO_SELL_TIME)
                 # 创建售出任务
-                asyncio.create_task(TransactionProcessor.append_sell(api_pool_info))
+                asyncio.create_task(TransactionProcessor.append_sell(pool_info))
         except Exception as e:
             logger.error(e)
 

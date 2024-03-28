@@ -5,12 +5,10 @@ from loguru import logger
 from pydantic import BaseModel
 
 from orm.crud import tasks
-from orm.models.tasks import TasksLog
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
 from solana_dex.transaction_processor import TransactionProcessor
-from utils.public import update_snipe_list
-from web.utils import update_object, custom_datetime_serializer
+from utils.public import update_snipe_list, update_object, custom_datetime_serializer
 
 router = APIRouter(prefix="/api")
 

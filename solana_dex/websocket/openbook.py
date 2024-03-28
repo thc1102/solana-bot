@@ -1,6 +1,5 @@
 import asyncio
 import pickle
-import time
 
 import websockets
 from loguru import logger
@@ -10,7 +9,7 @@ from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
 from solders.pubkey import Pubkey
 
-from db.redis_utils import RedisFactory
+from utils.redis_utils import RedisFactory
 from settings.config import AppConfig
 from solana_dex.common.constants import SOL_MINT_ADDRESS, OPENBOOK_MARKET
 from solana_dex.layout.market import MARKET_STATE_LAYOUT_V3

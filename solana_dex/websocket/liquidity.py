@@ -10,7 +10,8 @@ from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
 from solders.pubkey import Pubkey
 
-from db.redis_utils import RedisFactory
+from solana_dex.transaction_processor import TransactionProcessor
+from utils.redis_utils import RedisFactory
 from settings.config import AppConfig
 from solana_dex.common.constants import RAYDIUM_LIQUIDITY_POOL_V4, LAMPORTS_PER_SOL
 from solana_dex.layout.raydium import LIQUIDITY_STATE_LAYOUT_V4
@@ -100,7 +101,7 @@ async def parse_liqudity_data(data):
                         if any(result is False for result in results):
                             logger.info(f"{base_mint} 验证未通过")
                             return False
-                    logger.info(f"模拟购买{base_mint}")
+                    asyncio.create_task(TransactionProcessor.append_buy(pool_info))
             return
         logger.warning(
             f"监听到 {base_mint} 流动性变化 匹配失败 开放时间 {pool_open_time_str} 耗时 {matching_time:.3f}")
