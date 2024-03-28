@@ -130,6 +130,3 @@ async def run():
             continue
         except Exception as e:
             logger.error(f"发生意外错误 {e}")
-
-
-asyncio.run(run())

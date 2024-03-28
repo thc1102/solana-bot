@@ -48,4 +48,3 @@ async def run():
             logger.error(f"发生意外错误 {e}")
 
 
-asyncio.run(run())
