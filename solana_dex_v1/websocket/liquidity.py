@@ -86,18 +86,19 @@ async def parse_liqudity_data(data):
             logger.info(
                 f"监听到 {base_mint} 流动性变化 匹配成功 开放时间 {pool_open_time_str} 耗时 {matching_time:.3f}")
             if AppConfig.AUTO_TRADING:
-                # 流动池检测
-                if AppConfig.POOL_SIZE != 0:
-                    task_list.append(check_raydium_liquidity(Pubkey.from_string(pool_info.quoteVault)))
-                # Mint权限检测
-                if AppConfig.CHECK_IF_MINT_IS_RENOUNCED:
-                    task_list.append(check_mint_status(Pubkey.from_string(pool_info.baseMint)))
-                if len(task_list) != 0:
-                    results = await asyncio.gather(*task_list)
-                    if any(result is False for result in results):
-                        logger.info(f"{base_mint} 验证未通过")
-                        return False
-                logger.info(f"模拟购买{base_mint}")
+                if time.time() - pool_open_time < AppConfig.RUN_LP_TIME:
+                    # 流动池检测
+                    if AppConfig.POOL_SIZE != 0:
+                        task_list.append(check_raydium_liquidity(Pubkey.from_string(pool_info.quoteVault)))
+                    # Mint权限检测
+                    if AppConfig.CHECK_IF_MINT_IS_RENOUNCED:
+                        task_list.append(check_mint_status(Pubkey.from_string(pool_info.baseMint)))
+                    if len(task_list) != 0:
+                        results = await asyncio.gather(*task_list)
+                        if any(result is False for result in results):
+                            logger.info(f"{base_mint} 验证未通过")
+                            return False
+                    logger.info(f"模拟购买{base_mint}")
             return
         logger.warning(
             f"监听到 {base_mint} 流动性变化 匹配失败 开放时间 {pool_open_time_str} 耗时 {matching_time:.3f}")
