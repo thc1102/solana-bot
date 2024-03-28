@@ -13,9 +13,9 @@ from spl.token.async_client import AsyncToken
 from spl.token.constants import TOKEN_PROGRAM_ID
 from spl.token.instructions import close_account, CloseAccountParams, create_associated_token_account
 
-from solana_dex_v1.common.constants import OPENBOOK_MARKET, RAYDIUM_LIQUIDITY_POOL_V4, SOL_MINT_ADDRESS
-from solana_dex_v1.layout.raydium import ROUTE_DATA_LAYOUT
-from solana_dex_v1.model.pool import PoolInfo
+from solana_dex.common.constants import OPENBOOK_MARKET, RAYDIUM_LIQUIDITY_POOL_V4, SOL_MINT_ADDRESS
+from solana_dex.layout.raydium import ROUTE_DATA_LAYOUT
+from solana_dex.model.pool import PoolInfo
 
 
 def make_swap_instruction(

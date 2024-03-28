@@ -1,6 +1,6 @@
 from construct import Struct
 
-from solana_dex_v1.utils.layout_utils import pad, publicKey, u8, u64, u128
+from solana_dex.utils.layout_utils import pad, publicKey, u8, u64, u128
 
 ROUTE_DATA_LAYOUT = Struct(u8("instruction"), u64("amountIn"), u64("minAmountOut"))
 

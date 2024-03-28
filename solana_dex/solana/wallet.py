@@ -1,15 +1,12 @@
 import asyncio
-import json
-import time
 from typing import Optional
 
-from loguru import logger
 from solana.rpc.commitment import Commitment, Finalized
 from solana.rpc.types import TokenAccountOpts
 from solders.keypair import Keypair
 
 from solana_dex.common.constants import TOKEN_PROGRAM_ID
-from solana_dex.solana.solana_client import SolanaRPCClient
+from solana_dex.utils.client_utils import AsyncClientFactory
 
 lock = asyncio.Lock()
 
@@ -35,23 +32,25 @@ class Wallet:
         self.token_data = {}
 
     async def get_sol_balance(self):
-        balance_resp = await SolanaRPCClient.get_balance(self.pubkey)
+        async with AsyncClientFactory() as client:
+            balance_resp = await client.get_balance(self.pubkey)
         return balance_resp.value / 10 ** 9
 
     async def update_token_accounts(self, commitment: Optional[Commitment] = Finalized):
         try:
-            balance = await SolanaRPCClient.get_token_accounts_by_owner_json_parsed(self.pubkey,
-                                                                                    TokenAccountOpts(
-                                                                                        program_id=TOKEN_PROGRAM_ID),
-                                                                                    commitment)
-            token_data = {}
-            for item in balance.value:
-                address = item.pubkey
-                mint = item.account.data.parsed["info"]["mint"]
-                amount = item.account.data.parsed["info"]["tokenAmount"]["amount"]
-                ui_amount = item.account.data.parsed["info"]["tokenAmount"]["uiAmount"]
-                decimals = item.account.data.parsed["info"]["tokenAmount"]["decimals"]
-                token_data[mint] = TokenAccountData(address, mint, amount, ui_amount, decimals)
+            async with AsyncClientFactory() as client:
+                balance = await client.get_token_accounts_by_owner_json_parsed(self.pubkey,
+                                                                               TokenAccountOpts(
+                                                                                   program_id=TOKEN_PROGRAM_ID),
+                                                                               commitment)
+                token_data = {}
+                for item in balance.value:
+                    address = item.pubkey
+                    mint = item.account.data.parsed["info"]["mint"]
+                    amount = item.account.data.parsed["info"]["tokenAmount"]["amount"]
+                    ui_amount = item.account.data.parsed["info"]["tokenAmount"]["uiAmount"]
+                    decimals = item.account.data.parsed["info"]["tokenAmount"]["decimals"]
+                    token_data[mint] = TokenAccountData(address, mint, amount, ui_amount, decimals)
             # 加锁保证并发不会影响
             async with lock:
                 self.token_data = token_data

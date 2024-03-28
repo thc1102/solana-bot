@@ -1,31 +1,27 @@
 import asyncio
+import pickle
+import time
 
 import websockets
 from loguru import logger
-from solana.rpc.commitment import Finalized, Processed
+from solana.rpc.commitment import Processed
 from solana.rpc.types import MemcmpOpts, DataSliceOpts
 from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
+from solders.pubkey import Pubkey
 
-from orm.crud.raydium import create_market_state
-from orm.models.raydium import MarketState
+from db.redis_utils import RedisFactory
 from settings.config import AppConfig
-from solana_dex.common.constants import OPENBOOK_MARKET, SOL_MINT_ADDRESS
-from solana_dex.layout.serum_layout import MARKET_STATE_LAYOUT_V3
-
-exclude_address_set = set()
+from solana_dex.common.constants import SOL_MINT_ADDRESS, OPENBOOK_MARKET
+from solana_dex.layout.market import MARKET_STATE_LAYOUT_V3
+from solana_dex.model.pool import MarketState
 
 
 async def parse_openbook_data(data):
     try:
         info = MARKET_STATE_LAYOUT_V3.parse(data.result.value.account.data)
-        if info.baseMint in exclude_address_set:
-            return
-        exclude_address_set.add(info.baseMint)
-        await create_market_state(
-            {"baseMint": info.baseMint, "eventQueue": info.eventQueue, "bids": info.bids, "asks": info.asks,
-             "vaultSignerNonce": info.vaultSignerNonce, "baseVault": info.baseVault, "quoteVault": info.quoteVault}
-        )
+        async with RedisFactory() as r:
+            await r.setnx(f"market:{str(Pubkey.from_bytes(info.baseMint))}", pickle.dumps(MarketState(info)))
     except Exception as e:
         logger.exception(e)
 
@@ -34,7 +30,7 @@ async def run():
     logger.info("监听 OpenBook 变化")
     while True:
         try:
-            async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT, max_queue=None) as wss:
+            async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT) as wss:
                 await wss.program_subscribe(
                     OPENBOOK_MARKET, Processed, "base64",
                     data_slice=DataSliceOpts(length=388, offset=0),
@@ -50,3 +46,5 @@ async def run():
             continue
         except Exception as e:
             logger.error(f"发生意外错误 {e}")
+
+

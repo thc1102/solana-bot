@@ -1,8 +1,7 @@
-import base58
 from solders.pubkey import Pubkey
 
-from solana_dex_v1.common.constants import OPENBOOK_MARKET, RAY_AUTHORITY_V4
-from solana_dex_v1.layout.raydium import LIQUIDITY_STATE_LAYOUT_V4
+from solana_dex.common.constants import OPENBOOK_MARKET, RAY_AUTHORITY_V4
+from solana_dex.layout.raydium import LIQUIDITY_STATE_LAYOUT_V4
 
 
 class MarketState:

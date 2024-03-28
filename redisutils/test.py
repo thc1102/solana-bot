@@ -4,7 +4,7 @@ import pickle
 import time
 import redis.asyncio as redis
 
-from solana_dex_v1.model.pool import PoolInfo
+from solana_dex.model.pool import PoolInfo
 
 
 async def get_data_list():
@@ -34,21 +34,21 @@ async def get_keys_count(redis, pattern):
 
 async def test():
     r = await redis.from_url("redis://localhost")
+    t = time.time()
+    async with r.pipeline(transaction=True) as pipe:
+        for key, value in (await get_data_list()).items():
+            pipe.set(f"pool:{key}", pickle.dumps(value))
+        await pipe.execute()
+    print(time.time() - t)
     # t = time.time()
-    # async with r.pipeline(transaction=True) as pipe:
-    #     for key, value in (await get_data_list()).items():
-    #         pipe.set(f"pool:{key}", pickle.dumps(value))
-    #     await pipe.execute()
+    # pool = await r.get("pool:ECGYvDxNhm3w482JGhGwviDkV7exJJey6ZvXK3kathFM")
+    # if pool:
+    #     print(pickle.loads(pool).__dict__)
     # print(time.time() - t)
-    t = time.time()
-    pool = await r.get("pool:ECGYvDxNhm3w482JGhGwviDkV7exJJey6ZvXK3kathFM")
-    if pool:
-        print(pickle.loads(pool).__dict__)
-    print(time.time() - t)
-    t = time.time()
-    keys_count = await get_keys_count(r, "pool:*")
-    print(keys_count)
-    print(time.time() - t)
+    # t = time.time()
+    # keys_count = await get_keys_count(r, "pool:*")
+    # print(keys_count)
+    # print(time.time() - t)
 
 
 asyncio.run(test())

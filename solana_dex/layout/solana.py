@@ -1,6 +1,6 @@
 from construct import Struct
 
-from solana_dex_v1.utils.layout_utils import pad, publicKey, u8, u64, u128, u32, blob
+from solana_dex.utils.layout_utils import pad, publicKey, u8, u64, u128, u32, blob
 
 MINT_LAYOUT = Struct(
     u32('mintAuthorityOption'),

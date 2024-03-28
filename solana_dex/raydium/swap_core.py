@@ -1,24 +1,26 @@
 import asyncio
-from typing import Union
 
 from loguru import logger
-from solana.rpc.commitment import Confirmed
+from solana.rpc.async_api import AsyncClient
+from solana.rpc.commitment import Confirmed, Processed
 from solders.pubkey import Pubkey
 
 from orm.crud.tasks import create_tasks_log
 from settings.global_variables import GlobalVariables
-from solana_dex.common.constants import LAMPORTS_PER_SOL
-from solana_dex.raydium.models import ApiPoolInfo, WebPoolInfo
-from solana_dex.raydium.swap_util import SwapTransactionBuilder, AccountTransactionBuilder
-from solana_dex.solana.solana_client import SolanaRPCClient
 from solana_dex.solana.wallet import Wallet
+from solana_dex.common.constants import LAMPORTS_PER_SOL, SOL_MINT_ADDRESS
+from solana_dex.model.pool import PoolInfo
+from solana_dex.raydium.swap_utils import SwapTransactionBuilder, AccountTransactionBuilder
 
 
 class SwapCore:
-    def __init__(self, wallet: Wallet, pool_info: Union[ApiPoolInfo, WebPoolInfo], compute_unit_price: int = 250000):
+    def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo = None, wsol_type=True,
+                 compute_unit_price: int = 250000):
+        self.client = client
         self.wallet = wallet
         self.pool_info = pool_info
         self.compute_unit_price = compute_unit_price
+        self.wsol_type = wsol_type
 
     async def _buy(self, token_mint: Pubkey, amount_in: int):
         """
@@ -27,17 +29,24 @@ class SwapCore:
         :param amount_in: 支付数量
         :return:
         """
-        swap_transaction_builder = SwapTransactionBuilder(GlobalVariables.SolaraClient, self.pool_info,
+        if not self.pool_info:
+            logger.info(f"此方法必须初始化PoolInfo才可以使用")
+            return
+        swap_transaction_builder = SwapTransactionBuilder(self.client, self.pool_info,
                                                           self.wallet.keypair, unit_price=self.compute_unit_price)
 
-        await swap_transaction_builder.append_buy(amount_in,
-                                                  not self.wallet.check_token_accounts(token_mint))
+        if self.wsol_type:
+            await swap_transaction_builder.wsol_append_buy(amount_in,
+                                                           not self.wallet.check_token_accounts(token_mint))
+        else:
+            await swap_transaction_builder.wsol_append_buy(amount_in,
+                                                           not self.wallet.check_token_accounts(token_mint))
         transaction = await swap_transaction_builder.compile_versioned_transaction()
-        txn_signature = (await GlobalVariables.SolaraClient.send_transaction(transaction)).value
+        txn_signature = (await self.client.send_transaction(transaction)).value
         logger.info(f"交易创建完成 {txn_signature}")
-        resp = await GlobalVariables.SolaraClient.confirm_transaction(
+        resp = await self.client.confirm_transaction(
             txn_signature,
-            Confirmed,
+            Processed,
         )
         return txn_signature
 
@@ -47,15 +56,22 @@ class SwapCore:
         :param amount_in: 支付数量
         :return:
         """
-        swap_transaction_builder = SwapTransactionBuilder(GlobalVariables.SolaraClient, self.pool_info,
+        if not self.pool_info:
+            logger.info(f"此方法必须初始化PoolInfo才可以使用")
+            return
+        swap_transaction_builder = SwapTransactionBuilder(self.client, self.pool_info,
                                                           self.wallet.keypair, unit_price=self.compute_unit_price)
-        await swap_transaction_builder.append_sell(amount_in)
+
+        if self.wsol_type:
+            await swap_transaction_builder.wsol_append_sell(amount_in)
+        else:
+            await swap_transaction_builder.sol_append_sell(amount_in)
         transaction = await swap_transaction_builder.compile_versioned_transaction()
-        txn_signature = (await GlobalVariables.SolaraClient.send_transaction(transaction)).value
+        txn_signature = (await self.client.send_transaction(transaction)).value
         logger.info(f"交易创建完成 {txn_signature}")
-        resp = await SolanaRPCClient.confirm_transaction(
+        resp = await self.client.confirm_transaction(
             txn_signature,
-            Confirmed,
+            Processed,
         )
         return txn_signature
 
@@ -118,27 +134,32 @@ class SwapCore:
             logger.error(f"交易失败 {e}")
             return False
 
-
-class AccountCore:
-    def __init__(self, wallet: Wallet):
-        self.wallet = wallet
-
     async def clone_no_balance_account(self):
         try:
             no_account = self.wallet.get_no_balance_account()
             if len(no_account) == 0:
                 logger.info("没有需要清理的账户")
                 return
-            account_transaction_builder = AccountTransactionBuilder(GlobalVariables.SolaraClient, self.wallet.keypair)
+            account_transaction_builder = AccountTransactionBuilder(self.client, self.wallet.keypair)
             for account in no_account:
                 account_transaction_builder.append_close_account(account)
             transaction = await account_transaction_builder.compile_versioned_transaction()
-            txn_signature = (await GlobalVariables.SolaraClient.send_transaction(transaction)).value
+            txn_signature = (await self.client.send_transaction(transaction)).value
             logger.info(f"任务创建完成 {txn_signature}")
-            resp = await SolanaRPCClient.confirm_transaction(
+            resp = await self.client.confirm_transaction(
                 txn_signature,
-                Confirmed,
+                Processed,
             )
             return txn_signature
         except Exception as e:
             logger.error(e)
+
+    async def to_wsol(self, amount: float):
+        wsol_status = self.wallet.get_token_accounts(SOL_MINT_ADDRESS)
+        if not wsol_status:
+            pass
+
+
+
+    async def clone_wsol(self):
+        pass

@@ -1,8 +1,8 @@
 import asyncio
 import pickle
 
-from solana_dex_v1.model.pool import PoolInfo
-from solana_dex_v1.utils.client_utils import AsyncClientFactory
+from solana_dex.model.pool import PoolInfo
+from solana_dex.utils.client_utils import AsyncClientFactory
 
 
 async def demo():
