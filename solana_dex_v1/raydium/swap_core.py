@@ -14,7 +14,7 @@ from solana_dex_v1.raydium.swap_utils import SwapTransactionBuilder, AccountTran
 
 
 class SwapCore:
-    def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo, wsol_type=True,
+    def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo = None, wsol_type=True,
                  compute_unit_price: int = 250000):
         self.client = client
         self.wallet = wallet
@@ -29,6 +29,9 @@ class SwapCore:
         :param amount_in: 支付数量
         :return:
         """
+        if self.pool_info:
+            logger.info(f"此方法必须初始化PoolInfo才可以使用")
+            return
         swap_transaction_builder = SwapTransactionBuilder(self.client, self.pool_info,
                                                           self.wallet.keypair, unit_price=self.compute_unit_price)
 
@@ -53,6 +56,9 @@ class SwapCore:
         :param amount_in: 支付数量
         :return:
         """
+        if self.pool_info:
+            logger.info(f"此方法必须初始化PoolInfo才可以使用")
+            return
         swap_transaction_builder = SwapTransactionBuilder(self.client, self.pool_info,
                                                           self.wallet.keypair, unit_price=self.compute_unit_price)
 
@@ -128,23 +134,17 @@ class SwapCore:
             logger.error(f"交易失败 {e}")
             return False
 
-
-class AccountCore:
-    def __init__(self, client, wallet: Wallet):
-        self.client = client
-        self.wallet = wallet
-
     async def clone_no_balance_account(self):
         try:
             no_account = self.wallet.get_no_balance_account()
             if len(no_account) == 0:
                 logger.info("没有需要清理的账户")
                 return
-            account_transaction_builder = AccountTransactionBuilder(GlobalVariables.SolaraClient, self.wallet.keypair)
+            account_transaction_builder = AccountTransactionBuilder(self.client, self.wallet.keypair)
             for account in no_account:
                 account_transaction_builder.append_close_account(account)
             transaction = await account_transaction_builder.compile_versioned_transaction()
-            txn_signature = (await GlobalVariables.SolaraClient.send_transaction(transaction)).value
+            txn_signature = (await self.client.send_transaction(transaction)).value
             logger.info(f"任务创建完成 {txn_signature}")
             resp = await self.client.confirm_transaction(
                 txn_signature,
