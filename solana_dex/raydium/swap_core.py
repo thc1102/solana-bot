@@ -153,13 +153,3 @@ class SwapCore:
             return txn_signature
         except Exception as e:
             logger.error(e)
-
-    async def to_wsol(self, amount: float):
-        wsol_status = self.wallet.get_token_accounts(SOL_MINT_ADDRESS)
-        if not wsol_status:
-            pass
-
-
-
-    async def clone_wsol(self):
-        pass
