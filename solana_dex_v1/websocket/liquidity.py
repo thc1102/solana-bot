@@ -88,10 +88,10 @@ async def parse_liqudity_data(data):
             if AppConfig.AUTO_TRADING:
                 # 流动池检测
                 if AppConfig.POOL_SIZE != 0:
-                    task_list.append(check_raydium_liquidity(Pubkey.from_bytes(pool_info.quoteVault)))
+                    task_list.append(check_raydium_liquidity(Pubkey.from_string(pool_info.quoteVault)))
                 # Mint权限检测
                 if AppConfig.CHECK_IF_MINT_IS_RENOUNCED:
-                    task_list.append(check_mint_status(Pubkey.from_bytes(pool_info.baseMint)))
+                    task_list.append(check_mint_status(Pubkey.from_string(pool_info.baseMint)))
                 if len(task_list) != 0:
                     results = await asyncio.gather(*task_list)
                     if any(result is False for result in results):
@@ -110,8 +110,7 @@ async def run():
     logger.info("监听 Raydium 变化")
     while True:
         try:
-            async with connect(
-                    "wss://dimensional-frequent-wave.solana-mainnet.quiknode.pro/ab01b5056e35be398d8fa71f3d305c7848bf23fb/") as wss:
+            async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT) as wss:
                 await wss.program_subscribe(
                     RAYDIUM_LIQUIDITY_POOL_V4, Processed, "base64",
                     data_slice=DataSliceOpts(length=752, offset=0),
