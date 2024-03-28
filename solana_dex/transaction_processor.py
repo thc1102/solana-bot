@@ -30,7 +30,7 @@ class TransactionProcessor:
     """
 
     @staticmethod
-    async def append_buy(pool_info: PoolInfo, task_info=None, check_buy_repeat: bool = True):
+    async def append_buy(pool_info: PoolInfo, task_info=None, check_buy_repeat: bool = True, sleep=0):
         try:
             if check_buy_repeat:
                 if pool_info.baseMint in exclude_buy_set:
@@ -44,6 +44,8 @@ class TransactionProcessor:
                     amount = float(task_info.amount)
                 else:
                     amount = AppConfig.AUTO_QUOTE_AMOUNT
+                if sleep != 0:
+                    await asyncio.sleep(sleep)
                 buy = await send_with_retry(lambda: swap.buy(pool_info.baseMint, amount),
                                             max_attempts=AppConfig.MAX_BUY_RETRIES)
                 # 购买完成后去重

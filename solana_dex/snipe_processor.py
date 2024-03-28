@@ -53,7 +53,7 @@ class SnipeProcessor:
                                     logger.info(f"狙击任务 {task.baseMint} 已达到启动时间限制 删除狙击任务")
                                     await Tasks.filter(baseMint=task.baseMint).delete()
                                     await asyncio.to_thread(self._delete_snipe_task, task.baseMint)
-                                elif 5 < start_sleep < 60:
+                                elif 5 < start_sleep < 30:
                                     task_obj = self._create_snipe_task(pool_info, task, start_sleep + 0.5)
                                     snipe_task = asyncio.create_task(task_obj)
                                     SnipeProcessor._snipe_map[task.baseMint] = snipe_task
@@ -72,8 +72,7 @@ class SnipeProcessor:
     async def _create_snipe_task(self, pool_info: PoolInfo, task_info: Tasks, sleep: int):
         try:
             logger.info(f"狙击任务 {task_info.baseMint} 已开启 等待时间 {sleep}")
-            await asyncio.sleep(sleep)
-            await TransactionProcessor.append_buy(pool_info, task_info)
+            await TransactionProcessor.append_buy(pool_info, task_info, sleep=sleep)
         except asyncio.CancelledError:
             logger.info(f"狙击任务 {task_info.baseMint} 已关闭")
 
