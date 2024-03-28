@@ -343,7 +343,7 @@
             }
 
             const deleteTasksLog = () => {
-                axios.get('/api/delete_tasks')
+                axios.get('/api/delete_tasks_log')
                     .then(function (response) {
                         console.log(response);
                         getTasksLog()

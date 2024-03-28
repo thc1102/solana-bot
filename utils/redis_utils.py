@@ -21,5 +21,6 @@ class RedisFactory:
         return self._redis
 
     async def __aexit__(self, exc_type, exc, tb):
+        # 由于是共用连接池 所以不需要断开链接
         # return await self._redis.aclose()
-        pass
+        return

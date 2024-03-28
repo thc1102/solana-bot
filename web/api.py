@@ -4,9 +4,10 @@ from fastapi import APIRouter
 from loguru import logger
 from pydantic import BaseModel
 
-from orm.crud import tasks
+from orm.tasks import Tasks, TasksLog
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
+from solana_dex.snipe_processor import SnipeProcessor
 from solana_dex.transaction_processor import TransactionProcessor
 from utils.public import update_snipe_list, update_object, custom_datetime_serializer
 
@@ -64,6 +65,10 @@ async def get_config():
 
 @router.post("/set_config")
 async def set_config(config: ConfigData):
+    if config.USE_SNIPE_LIST:
+        await SnipeProcessor().start()
+    else:
+        await SnipeProcessor().stop()
     async with lock:
         update_object(AppConfig, config)
         logger.info("运行中配置信息已更新")
@@ -72,7 +77,7 @@ async def set_config(config: ConfigData):
 
 @router.get("/get_tasks")
 async def get_tasks():
-    tasks_list = await tasks.get_tasks()
+    tasks_list = await Tasks.all().order_by("-updatedAt")
     # 序列化日期时间字段
     for task in tasks_list:
         task.updatedAt = custom_datetime_serializer(task.updatedAt)
@@ -81,30 +86,31 @@ async def get_tasks():
 
 @router.post("/create_tasks")
 async def create_tasks(tasks_data: TasksData):
-    await tasks.create_tasks(tasks_data.dict())
+    await Tasks.create(**tasks_data.dict())
     asyncio.create_task(update_snipe_list())
     return "ok"
 
 
 @router.post("/delete_tasks")
 async def delete_tasks(data: DeleteData):
-    await tasks.delete_tasks(data.id)
+    await SnipeProcessor().sync_db_to_task()
+    await Tasks.filter(id=data.id).delete()
     asyncio.create_task(update_snipe_list())
     return "ok"
 
 
 @router.get("/get_tasks_log")
 async def get_tasks_log():
-    tasks_log_list = await tasks.get_tasks_log()
+    tasks_log_list = await TasksLog.all().order_by("-updatedAt")
     # 序列化日期时间字段
     for task_log in tasks_log_list:
         task_log.updatedAt = custom_datetime_serializer(task_log.updatedAt)
     return tasks_log_list
 
 
-@router.get("/delete_tasks")
-async def delete_tasks():
-    await tasks.delete_task_log()
+@router.get("/delete_tasks_log")
+async def delete_tasks_log():
+    await TasksLog.all().delete()
     return "ok"
 
 

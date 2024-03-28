@@ -1,0 +1,90 @@
+import asyncio
+import pickle
+import time
+
+from loguru import logger
+
+from orm.tasks import Tasks
+from solana_dex.model.pool import PoolInfo
+from solana_dex.transaction_processor import TransactionProcessor
+from utils.redis_utils import RedisFactory
+
+
+class SnipeProcessor:
+    _snipe_map = {}
+    _run_status = False
+    _refresh_task = None
+
+    async def start(self):
+        if not SnipeProcessor._run_status:
+            SnipeProcessor._run_status = True
+            SnipeProcessor._refresh_task = asyncio.create_task(self._refresh_snipe_map())
+            logger.info("狙击模式已开启")
+
+    async def stop(self):
+        SnipeProcessor._run_status = False
+        snipe_map_copy = dict(SnipeProcessor._snipe_map)
+        for mint, task in snipe_map_copy.items():
+            task.cancel()
+        SnipeProcessor._refresh_task.cancel()
+        await asyncio.sleep(0.05)
+        SnipeProcessor._snipe_map = {}
+
+    async def _refresh_snipe_map(self):
+        try:
+            while SnipeProcessor._run_status:
+                try:
+                    task_list = await Tasks.all()
+                    # 获取狙击列表
+                    for task in task_list:
+                        # 判断是否已经创建任务
+                        if task.baseMint not in SnipeProcessor._snipe_map:
+                            async with RedisFactory() as r:
+                                pool_info = await r.get(f"pool:{task.baseMint}")
+                                if not pool_info:
+                                    logger.info(f"狙击任务 {task.baseMint} 未匹配到池信息等待下次匹配")
+                                    continue
+                                pool_info = pickle.loads(pool_info)
+                                if not pool_info.poolOpenTime:
+                                    logger.info(f"狙击任务 {task.baseMint} 池信息中无法提取启动时间")
+                                    continue
+                                start_sleep = pool_info.poolOpenTime - time.time()
+                                if start_sleep < 0:
+                                    logger.info(f"狙击任务 {task.baseMint} 已达到启动时间限制 删除狙击任务")
+                                    await Tasks.filter(baseMint=task.baseMint).delete()
+                                    await asyncio.to_thread(self._delete_snipe_task, task.baseMint)
+                                elif 5 < start_sleep < 60:
+                                    task_obj = self._create_snipe_task(pool_info, task, start_sleep + 0.5)
+                                    snipe_task = asyncio.create_task(task_obj)
+                                    SnipeProcessor._snipe_map[task.baseMint] = snipe_task
+                except Exception as e:
+                    logger.error(e)
+                await asyncio.sleep(5)
+            else:
+                logger.info("狙击模式已停止")
+        except asyncio.CancelledError:
+            logger.info("狙击模式已关闭")
+
+    def _delete_snipe_task(self, mint):
+        if mint in SnipeProcessor._snipe_map:
+            del SnipeProcessor._snipe_map[mint]
+
+    async def _create_snipe_task(self, pool_info: PoolInfo, task_info: Tasks, sleep: int):
+        try:
+            logger.info(f"狙击任务 {task_info.baseMint} 已开启 等待时间 {sleep}")
+            await asyncio.sleep(sleep)
+            await TransactionProcessor.append_buy(pool_info, task_info)
+        except asyncio.CancelledError:
+            logger.info(f"狙击任务 {task_info.baseMint} 已关闭")
+
+    async def sync_db_to_task(self):
+        try:
+            task_list = await Tasks.all()
+            task_mints = {item.baseMint for item in task_list}
+            snipe_map_copy = dict(SnipeProcessor._snipe_map)
+            for mint, snipe_task in snipe_map_copy.items():
+                if mint not in task_mints:
+                    snipe_task.cancel()
+                    await asyncio.to_thread(self._delete_snipe_task, mint)
+        except Exception as e:
+            logger.error(e)

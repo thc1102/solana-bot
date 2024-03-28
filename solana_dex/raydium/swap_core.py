@@ -2,15 +2,14 @@ import asyncio
 
 from loguru import logger
 from solana.rpc.async_api import AsyncClient
-from solana.rpc.commitment import Confirmed, Processed
+from solana.rpc.commitment import Processed
 from solders.pubkey import Pubkey
 
-from orm.crud.tasks import create_tasks_log
-from settings.global_variables import GlobalVariables
-from solana_dex.solana.wallet import Wallet
-from solana_dex.common.constants import LAMPORTS_PER_SOL, SOL_MINT_ADDRESS
+from orm.tasks import TasksLog
+from solana_dex.common.constants import LAMPORTS_PER_SOL
 from solana_dex.model.pool import PoolInfo
 from solana_dex.raydium.swap_utils import SwapTransactionBuilder, AccountTransactionBuilder
+from solana_dex.solana.wallet import Wallet
 
 
 class SwapCore:
@@ -81,7 +80,7 @@ class SwapCore:
             txn_signature = await self._buy(mint, amount_in)
             logger.info(f"购买结束 https://solscan.io/tx/{txn_signature}")
             logger.info(f"dexscreener https://dexscreener.com/solana/{mint}?maker={self.wallet.pubkey}")
-            asyncio.create_task(create_tasks_log({
+            asyncio.create_task(TasksLog.create(**{
                 "pubkey": self.wallet.pubkey,
                 "baseMint": mint,
                 "tx": txn_signature,
@@ -106,7 +105,7 @@ class SwapCore:
                         return False
                     txn_signature = await self._sell(mint_amount)
                     logger.info(f"出售结束 https://solscan.io/tx/{txn_signature}")
-                    asyncio.create_task(create_tasks_log({
+                    asyncio.create_task(TasksLog.create(**{
                         "pubkey": self.wallet.pubkey,
                         "baseMint": mint,
                         "tx": txn_signature,
@@ -121,7 +120,7 @@ class SwapCore:
             else:
                 txn_signature = await self._sell(amount)
                 logger.info(f"出售结束 https://solscan.io/tx/{txn_signature}")
-                asyncio.create_task(create_tasks_log({
+                asyncio.create_task(TasksLog.create(**{
                     "pubkey": self.wallet.pubkey,
                     "baseMint": mint,
                     "tx": txn_signature,

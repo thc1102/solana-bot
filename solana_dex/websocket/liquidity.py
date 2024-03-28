@@ -34,6 +34,7 @@ async def generate_pool_data(base_mint, liqudity_id, liqudity_info):
     async with RedisFactory() as r:
         pool_info = await r.get(f"pool:{base_mint}")
         if pool_info:
+            asyncio.create_task(update_db_pool_data(base_mint, pickle.loads(pool_info)))
             return pickle.loads(pool_info)
         market_data = await r.get(f"market:{base_mint}")
         if market_data:
@@ -84,8 +85,9 @@ async def parse_liqudity_data(data):
         matching_time = time.time() - now_timestamp
         if pool_info:
             task_list = []
-            logger.info(
-                f"监听到 {base_mint} 流动性变化 匹配成功 开放时间 {pool_open_time_str} 耗时 {matching_time:.3f}")
+            if not AppConfig.LOG_FILTER:
+                logger.info(
+                    f"监听到 {base_mint} 流动性变化 匹配成功 开放时间 {pool_open_time_str} 耗时 {matching_time:.3f}")
             if AppConfig.AUTO_TRADING:
                 if now_timestamp - pool_open_time < AppConfig.RUN_LP_TIME:
                     if now_timestamp - pool_open_time < 0:
@@ -103,8 +105,9 @@ async def parse_liqudity_data(data):
                             return False
                     asyncio.create_task(TransactionProcessor.append_buy(pool_info))
             return
-        logger.warning(
-            f"监听到 {base_mint} 流动性变化 匹配失败 开放时间 {pool_open_time_str} 耗时 {matching_time:.3f}")
+        if not AppConfig.LOG_FILTER:
+            logger.warning(
+                f"监听到 {base_mint} 流动性变化 匹配失败 开放时间 {pool_open_time_str} 耗时 {matching_time:.3f}")
         exclude_address_set.discard(liqudity_id)
     except Exception as e:
         logger.error(e)

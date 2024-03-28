@@ -1,25 +1,19 @@
 import asyncio
+import datetime
+from typing import Union, Any
 
 from loguru import logger
 
-from orm.crud import tasks
+from orm.tasks import Tasks
 from settings.config import AppConfig
-from settings.global_variables import GlobalVariables
-import datetime
-from typing import Union, Any
 
 lock = asyncio.Lock()
 
 
 async def update_snipe_list():
     # 刷新狙击列表
-    new_snipe_list = {}
-    all_task = await tasks.get_tasks()
-    for task in all_task:
-        new_snipe_list[task.baseMint] = task
-    async with lock:
-        GlobalVariables.snipe_list = new_snipe_list
-    logger.info(f"狙击列表更新完成 当前狙击数量 {len(new_snipe_list)}  狙击状态 {AppConfig.USE_SNIPE_LIST}")
+    all_task = await Tasks.all()
+    logger.info(f"狙击列表 当前狙击数量 {len(all_task)}  狙击状态 {AppConfig.USE_SNIPE_LIST}")
 
 
 def update_object(obj, data):

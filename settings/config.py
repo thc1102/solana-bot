@@ -17,6 +17,7 @@ class Config(BaseSettings):
     AUTO_SELL_TIME: int = 60
     RUN_LP_TIME: int = 60
     WEB_PORT: int = 5000
+    LOG_FILTER: bool = True
 
     class Config:
         env_file = '.env'
