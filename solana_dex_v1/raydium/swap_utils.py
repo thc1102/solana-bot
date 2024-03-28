@@ -84,12 +84,12 @@ class SwapTransactionBuilder:
         try:
             recent_blockhash = self.client.blockhash_cache.get()
         except:
-            recent_blockhash = (await self.client.get_latest_blockhash()).value
+            recent_blockhash = (await self.client.get_latest_blockhash()).value.blockhash
         compiled_message = MessageV0.try_compile(
             self.payer.pubkey(),
             self.instructions,
             [],  # lookup tables
-            recent_blockhash.blockhash,
+            recent_blockhash,
         )
         keypairs = [self.payer]
         if self.new_keypair is not None:

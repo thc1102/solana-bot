@@ -14,8 +14,7 @@ from solana_dex_v1.raydium.swap_utils import SwapTransactionBuilder, AccountTran
 
 
 class SwapCore:
-    def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo,
-                 wsol_type=True,
+    def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo, wsol_type=True,
                  compute_unit_price: int = 250000):
         self.client = client
         self.wallet = wallet
