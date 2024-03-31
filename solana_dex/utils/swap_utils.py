@@ -79,7 +79,7 @@ class SwapTransactionBuilder:
         self.new_keypair_list = []
 
     async def compile_versioned_transaction(self):
-        recent_blockhash = (await self.client.get_latest_blockhash(Confirmed)).value.blockhash
+        recent_blockhash = (await self.client.get_latest_blockhash(Finalized)).value.blockhash
         compiled_message = MessageV0.try_compile(
             self.payer.pubkey(),
             self.instructions,
@@ -92,13 +92,14 @@ class SwapTransactionBuilder:
         return VersionedTransaction(compiled_message, keypairs)
 
     async def compile_signed_transaction(self):
-        recent_blockhash = (await self.client.get_latest_blockhash(Confirmed)).value.blockhash
+        recent_blockhash = (await self.client.get_latest_blockhash(Finalized)).value
+        print(recent_blockhash)
         keypairs = [self.payer]
         if len(self.new_keypair_list) != 0:
             keypairs.extend(self.new_keypair_list)
         tx = solders_Transaction.new_signed_with_payer(
             instructions=self.instructions, payer=self.payer.pubkey(), signing_keypairs=keypairs,
-            recent_blockhash=recent_blockhash
+            recent_blockhash=recent_blockhash.blockhash
         )
         tx = solana_Transaction().from_solders(tx)
         return tx

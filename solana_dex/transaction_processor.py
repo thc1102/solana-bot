@@ -139,7 +139,7 @@ class TransactionProcessor:
 
     @staticmethod
     async def web_clone_account():
-        async with AsyncClientFactory(blockhash_status=True) as client:
+        async with AsyncClientFactory() as client:
             swap = SwapCore(client, GlobalVariables.default_wallet)
             txn_signature = await swap.close_no_balance_account()
             if not txn_signature:

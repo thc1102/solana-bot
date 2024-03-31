@@ -20,7 +20,7 @@ async def run():
     await wallet.update_token_accounts()
     await inti_jito_client()
     # await asyncio.sleep(180)
-    # print(await TransactionProcessor.web_buy("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82", 0.01))
+    print(await TransactionProcessor.web_buy("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82", 0.01))
     # amount = wallet.get_token_accounts("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82").uiAmount
     # print(amount)
     # print(await TransactionProcessor.web_sell("ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82", amount))
