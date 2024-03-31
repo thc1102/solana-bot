@@ -1,26 +1,35 @@
 import asyncio
+import random
+import time
 from typing import Optional
 
+from jito_searcher_client import tx_to_protobuf_packet
+from jito_searcher_client.generated.bundle_pb2 import Bundle
+from jito_searcher_client.generated.searcher_pb2 import SendBundleRequest
 from loguru import logger
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.commitment import Processed, Commitment
 from solders.pubkey import Pubkey
 
 from orm.tasks import TasksLog
+from settings.config import AppConfig
+from settings.global_variables import GlobalVariables
 from solana_dex.common.constants import LAMPORTS_PER_SOL
 from solana_dex.model.pool import PoolInfo
-from solana_dex.utils.swap_utils import SwapTransactionBuilder
 from solana_dex.solana.wallet import Wallet
+from solana_dex.utils.client_utils import JitoClientFactory
+from solana_dex.utils.swap_utils import SwapTransactionBuilder
 
 
 class SwapCore:
-    def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo = None, wsol_type=True,
-                 compute_unit_price: int = 500000):
+    def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo = None,
+                 compute_unit_price: int = 500000, wsol_type=True, jito_status=True):
         self.client = client
         self.wallet = wallet
         self.pool_info = pool_info
         self.compute_unit_price = compute_unit_price
         self.wsol_type = wsol_type
+        self.jito_status = jito_status
 
     async def confirm_transaction(self, txn_signature, commitment: Optional[Commitment] = Processed):
         try:
@@ -51,8 +60,23 @@ class SwapCore:
         else:
             await swap_transaction_builder.sol_append_buy(self.pool_info, amount_in,
                                                           not self.wallet.check_token_accounts(token_mint))
-        transaction = await swap_transaction_builder.compile_versioned_transaction()
-        txn_signature = (await self.client.send_transaction(transaction)).value
+        if self.jito_status:
+            swap_transaction_builder.append_transfer(
+                random.choice(GlobalVariables.tip_payment_accounts),
+                int(AppConfig.JITO_TIP_AMOUNT * LAMPORTS_PER_SOL)
+            )
+            transaction = await swap_transaction_builder.compile_signed_transaction()
+            txn_signature = transaction.signatures[0]
+            packets = [tx_to_protobuf_packet(transaction)]
+            request_time = time.time()
+            t = time.time()
+            jito_client = await JitoClientFactory.get_shared_client(self.wallet.keypair)
+            print(f"获取客户端耗时 {time.time() - t}")
+            uuid_response = await jito_client.SendBundle(SendBundleRequest(bundle=Bundle(header=None, packets=packets)))
+            logger.info(f"JITO RESPONSE {uuid_response.uuid} 发送耗时 {time.time() - request_time}")
+        else:
+            transaction = await swap_transaction_builder.compile_versioned_transaction()
+            txn_signature = (await self.client.send_transaction(transaction)).value
         logger.info(f"buy {token_mint} 交易创建完成 {txn_signature}")
         return txn_signature
 
@@ -71,8 +95,20 @@ class SwapCore:
             swap_transaction_builder.wsol_append_sell(self.pool_info, amount_in)
         else:
             await swap_transaction_builder.sol_append_sell(self.pool_info, amount_in)
-        transaction = await swap_transaction_builder.compile_versioned_transaction()
-        txn_signature = (await self.client.send_transaction(transaction)).value
+        if self.jito_status:
+            swap_transaction_builder.append_transfer(
+                random.choice(GlobalVariables.tip_payment_accounts),
+                int(AppConfig.JITO_TIP_AMOUNT * LAMPORTS_PER_SOL)
+            )
+            transaction = await swap_transaction_builder.compile_signed_transaction()
+            txn_signature = transaction.signatures[0]
+            packets = [tx_to_protobuf_packet(transaction)]
+            jito_client = await JitoClientFactory.get_shared_client(self.wallet.keypair)
+            uuid_response = await jito_client.SendBundle(SendBundleRequest(bundle=Bundle(header=None, packets=packets)))
+            logger.info(f"JITO RESPONSE {uuid_response}")
+        else:
+            transaction = await swap_transaction_builder.compile_versioned_transaction()
+            txn_signature = (await self.client.send_transaction(transaction)).value
         logger.info(f"sell {self.pool_info.baseMint} 交易创建完成 {txn_signature}")
         return txn_signature
 

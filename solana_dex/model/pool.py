@@ -12,7 +12,7 @@ class MarketState:
         self.asks = data.get("asks")
         self.baseVault = data.get("baseVault")
         self.quoteVault = data.get("quoteVault")
-        self.vaultSignerNonce = data.get("vaultSignerNonce")
+        self.vaultSignerNonce = data.get("vaultSignerNonce", 0)
 
 
 class PoolInfo:

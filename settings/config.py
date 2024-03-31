@@ -18,6 +18,8 @@ class Config(BaseSettings):
     RUN_LP_TIME: int = 60
     WEB_PORT: int = 5000
     LOG_FILTER: bool = True
+    JITO_ENGINE: str = "tokyo.mainnet.block-engine.jito.wtf"
+    JITO_TIP_AMOUNT: float = 0.00001
 
     class Config:
         env_file = '.env'

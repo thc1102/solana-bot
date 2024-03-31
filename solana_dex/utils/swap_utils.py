@@ -1,15 +1,18 @@
+import time
+
 import solders.system_program as sp
 import spl.token.instructions as spl_token
 from solana.rpc.async_api import AsyncClient
-from solana.rpc.commitment import Finalized
+from solana.rpc.commitment import Finalized, Processed, Confirmed
 from solana.rpc.types import TokenAccountOpts
+from solana.transaction import Transaction as solana_Transaction
 from solders.compute_budget import set_compute_unit_price, set_compute_unit_limit
 from solders.instruction import AccountMeta, Instruction
 from solders.keypair import Keypair
 from solders.message import MessageV0
 from solders.pubkey import Pubkey
 from solders.token.associated import get_associated_token_address
-from solders.transaction import VersionedTransaction
+from solders.transaction import VersionedTransaction, Transaction as solders_Transaction
 from spl.token._layouts import ACCOUNT_LAYOUT
 from spl.token.async_client import AsyncToken
 from spl.token.constants import TOKEN_PROGRAM_ID
@@ -76,10 +79,7 @@ class SwapTransactionBuilder:
         self.new_keypair_list = []
 
     async def compile_versioned_transaction(self):
-        try:
-            recent_blockhash = self.client.blockhash_cache.get()
-        except:
-            recent_blockhash = (await self.client.get_latest_blockhash(Finalized)).value.blockhash
+        recent_blockhash = (await self.client.get_latest_blockhash(Confirmed)).value.blockhash
         compiled_message = MessageV0.try_compile(
             self.payer.pubkey(),
             self.instructions,
@@ -90,6 +90,18 @@ class SwapTransactionBuilder:
         if len(self.new_keypair_list) != 0:
             keypairs.extend(self.new_keypair_list)
         return VersionedTransaction(compiled_message, keypairs)
+
+    async def compile_signed_transaction(self):
+        recent_blockhash = (await self.client.get_latest_blockhash(Confirmed)).value.blockhash
+        keypairs = [self.payer]
+        if len(self.new_keypair_list) != 0:
+            keypairs.extend(self.new_keypair_list)
+        tx = solders_Transaction.new_signed_with_payer(
+            instructions=self.instructions, payer=self.payer.pubkey(), signing_keypairs=keypairs,
+            recent_blockhash=recent_blockhash
+        )
+        tx = solana_Transaction().from_solders(tx)
+        return tx
 
     def append_set_compute_budget(self, unit_price: int, unit_limit: int):
         # 添加 优先费

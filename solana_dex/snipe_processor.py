@@ -81,7 +81,7 @@ class SnipeProcessor:
 
     async def _create_snipe_task(self, pool_info: PoolInfo, task_info: Tasks, sleep: int):
         try:
-            sleep = int(sleep + 1)
+            sleep = sleep + 0.5
             logger.info(f"模式A 狙击任务 {task_info.baseMint} 已开启 等待时间 {sleep}")
             await TransactionProcessor.append_buy(pool_info, task_info, sleep=sleep)
         except asyncio.CancelledError:

@@ -40,7 +40,7 @@ class TransactionProcessor:
             TransactionProcessor.exclude_buy_set.add(pool_info.baseMint)
             # 获取默认钱包地址
             wallet = GlobalVariables.default_wallet
-            async with AsyncClientFactory(blockhash_status=True) as client:
+            async with AsyncClientFactory() as client:
                 swap = SwapCore(client, wallet, pool_info, compute_unit_price=AppConfig.MICROLAMPORTS)
                 amount = float(task_info.amount)
                 if sleep != 0:
@@ -73,7 +73,7 @@ class TransactionProcessor:
     async def append_sell(pool_info: PoolInfo, sleep=0):
         # 获取默认钱包
         wallet = GlobalVariables.default_wallet
-        async with AsyncClientFactory(blockhash_status=True) as client:
+        async with AsyncClientFactory() as client:
             swap = SwapCore(client, wallet, pool_info, compute_unit_price=AppConfig.MICROLAMPORTS)
             if sleep != 0:
                 await asyncio.sleep(AppConfig.AUTO_SELL_TIME)
@@ -99,7 +99,7 @@ class TransactionProcessor:
             return False, "获取流动池信息失败"
         pool_info = pickle.loads(pool_info)
         wallet = GlobalVariables.default_wallet
-        async with AsyncClientFactory(blockhash_status=True) as client:
+        async with AsyncClientFactory() as client:
             swap = SwapCore(client, wallet, pool_info, compute_unit_price=AppConfig.MICROLAMPORTS)
             txn_signature = await swap.buy(pool_info.baseMint, amount)
             if not txn_signature:
@@ -121,7 +121,7 @@ class TransactionProcessor:
             return False, "获取流动池信息失败"
         wallet = GlobalVariables.default_wallet
         pool_info = pickle.loads(pool_info)
-        async with AsyncClientFactory(blockhash_status=True) as client:
+        async with AsyncClientFactory() as client:
             swap = SwapCore(client, wallet, pool_info, compute_unit_price=AppConfig.MICROLAMPORTS)
             token_data = wallet.get_token_accounts(base_mint)
             amount = int(amount * (10 ** token_data.decimals))
