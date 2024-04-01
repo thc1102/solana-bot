@@ -1,4 +1,5 @@
 from construct import Bit, BitsSwapped, BitStruct, Bytes, BytesInteger, Int8ul, Int64ul, Padding, Adapter, Int32ul
+from solders.pubkey import Pubkey
 
 
 def u8(key: str):
@@ -18,7 +19,7 @@ def u128(key: str):
 
 
 def publicKey(key: str):
-    return key / Bytes(32)
+    return key / PublicKeyAdapter(Bytes(32))
 
 
 def pad(key: str, length: int):
@@ -27,6 +28,16 @@ def pad(key: str, length: int):
 
 def blob(key: str, length: int):
     return key / Bytes(length)
+
+
+class PublicKeyAdapter(Adapter):
+    def _decode(self, obj, context, path):
+        # 将字节序列转换为PublicKey对象
+        return Pubkey(obj)
+
+    def _encode(self, obj, context, path):
+        # 将PublicKey对象转换为字节序列
+        return bytes(obj)
 
 
 class WideBitsBuilder:

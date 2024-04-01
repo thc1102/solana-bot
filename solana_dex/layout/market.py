@@ -1,6 +1,6 @@
 from construct import Struct
 
-from solana_dex.utils.layout_utils import WideBitsBuilder, blob, publicKey, u64
+from utils.layout_utils import WideBitsBuilder, blob, publicKey, u64
 
 
 def account_flags_layout(_property="accountFlags"):
