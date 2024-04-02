@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import websockets
 from loguru import logger
@@ -7,45 +8,61 @@ from solana.rpc.types import MemcmpOpts, DataSliceOpts
 from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
 
-from solana.model import PoolInfo
-# from settings.config import AppConfig
-from solana.common import SOL_MINT_ADDRESS, OPENBOOK_MARKET
-from solana.layout import MARKET_STATE_LAYOUT_V3
+from solana_dex.model.pool import PoolInfo
+from solana_dex.common.constants import SOL_MINT_ADDRESS, OPENBOOK_MARKET
+from solana_dex.layout.market import MARKET_STATE_LAYOUT_V3
+
+from settings.config import AppConfig
+from utils.redis_utils import RedisFactory
 
 
 async def parse_openbook_data(data):
     try:
         info = MARKET_STATE_LAYOUT_V3.parse(data.result.value.account.data)
-        print(PoolInfo.from_market(info).__dict__)
-        # async with RedisFactory() as r:
-        #     pool_info = PoolInfo.from_market(info).to_json()
-        #     await r.setnx(f"pool:{pool_info.get('baseMint')}", json.dumps(pool_info))
+        async with RedisFactory() as r:
+            pool_info = PoolInfo.from_market(info).to_json()
+            await r.setnx(f"pool:{pool_info.get('baseMint')}", json.dumps(pool_info))
     except Exception as e:
-        logger.exception(e)
+        logger.error(e)
 
 
-async def run():
-    logger.info("监听 OpenBook 变化")
+async def handle_openbook_data(data):
+    # 处理订阅的 OpenBook 数据
+    try:
+        await parse_openbook_data(data)
+    except Exception as e:
+        logger.error(f"解析 OpenBook 数据时发生错误: {e}")
+
+
+async def subscribe_openbook(wss):
+    # 订阅 OpenBook 数据
+    await wss.program_subscribe(
+        OPENBOOK_MARKET, Confirmed, "base64",
+        data_slice=DataSliceOpts(length=388, offset=0),
+        filters=[MemcmpOpts(offset=85, bytes=str(SOL_MINT_ADDRESS))]
+    )
+    first_resp = await wss.recv()
+    subscription_id = first_resp[0].result
+    logger.info(f"订阅成功，subscription_id: {subscription_id}")
+    async for idx, updated_info in enumerate(wss):
+        asyncio.create_task(handle_openbook_data(updated_info[0]))
+    return subscription_id
+
+
+async def connect_and_subscribe():
+    # 连接到 RPC WebSocket 并订阅 OpenBook 数据
     while True:
         try:
-            async with connect(
-                    "wss://aged-few-sailboat.solana-mainnet.quiknode.pro/a59a384a0e707c877100881079c24ebfee00eb1b/") as wss:
-                await wss.program_subscribe(
-                    OPENBOOK_MARKET, Confirmed, "base64",
-                    data_slice=DataSliceOpts(length=388, offset=0),
-                    filters=[MemcmpOpts(offset=85, bytes=str(SOL_MINT_ADDRESS))]
-                )
-                first_resp = await wss.recv()
-                subscription_id = first_resp[0].result
-                async for idx, updated_info in enumerate(wss):
-                    asyncio.create_task(parse_openbook_data(updated_info[0]))
-                    # await parse_openbook_data(updated_info[0])
+            async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT) as wss:
+                logger.info("成功连接到 RPC WebSocket")
+                subscription_id = await subscribe_openbook(wss)
                 await wss.program_unsubscribe(subscription_id)
         except (ConnectionResetError, websockets.exceptions.ConnectionClosedError) as e:
-            logger.error(f"发生错误 {e} 正在重试...")
-            continue
+            logger.error(f"连接或订阅期间发生错误: {e}, 正在重试...")
+            await asyncio.sleep(5)  # 等待一段时间后重试
         except Exception as e:
-            logger.error(f"发生意外错误 {e}")
+            logger.error(f"连接或订阅期间发生意外错误: {e}")
 
 
-asyncio.run(run())
+if __name__ == '__main__':
+    asyncio.run(connect_and_subscribe())
