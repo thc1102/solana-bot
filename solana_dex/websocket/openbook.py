@@ -1,9 +1,10 @@
 import asyncio
+import json
 import pickle
 
 import websockets
 from loguru import logger
-from solana.rpc.commitment import Processed
+from solana.rpc.commitment import Processed, Confirmed
 from solana.rpc.types import MemcmpOpts, DataSliceOpts
 from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
@@ -19,10 +20,10 @@ from solana_dex.layout.market import MARKET_STATE_LAYOUT_V3
 async def parse_openbook_data(data):
     try:
         info = MARKET_STATE_LAYOUT_V3.parse(data.result.value.account.data)
-        print(info)
-        print(PoolInfo(info).__dict__)
-        # async with RedisFactory() as r:
-        #     await r.setnx(f"market:{str(Pubkey.from_bytes(info.baseMint))}", pickle.dumps(MarketState(info)))
+        print(PoolInfo.from_market(info).__dict__)
+        async with RedisFactory() as r:
+            pool_info = PoolInfo.from_market(info).to_json()
+            await r.setnx(f"pool:{pool_info.get('baseMint')}", json.dumps(pool_info))
     except Exception as e:
         logger.exception(e)
 
@@ -34,7 +35,7 @@ async def run():
             async with connect(
                     "wss://aged-few-sailboat.solana-mainnet.quiknode.pro/a59a384a0e707c877100881079c24ebfee00eb1b/") as wss:
                 await wss.program_subscribe(
-                    OPENBOOK_MARKET, Processed, "base64",
+                    OPENBOOK_MARKET, Confirmed, "base64",
                     data_slice=DataSliceOpts(length=388, offset=0),
                     filters=[MemcmpOpts(offset=85, bytes=str(SOL_MINT_ADDRESS))]
                 )

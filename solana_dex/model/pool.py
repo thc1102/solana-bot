@@ -8,24 +8,38 @@ from utils.liquidity_utils import get_associated_id, get_associated_open_orders,
 
 
 class PoolInfo:
-    def __init__(self, market: MARKET_STATE_LAYOUT_V3):
-        self.id = get_associated_id(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress)
-        self.baseMint = market.baseMint
-        self.quoteMint = market.quoteMint
-        self.authority = RAYDIUM_AMM_AUTHORITY
-        self.openOrders = get_associated_open_orders(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress)
-        self.targetOrders = get_associated_target_orders(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress)
-        self.baseVault = get_associated_base_vault(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress)
-        self.quoteVault = get_associated_quote_vault(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress)
-        self.marketId = market.ownAddress
-        self.marketBids = market.bids
-        self.marketAsks = market.asks
-        self.marketBaseVault = market.baseVault
-        self.marketQuoteVault = market.quoteVault
-        self.marketAuthority = Pubkey.create_program_address(
-            [bytes(market.ownAddress)]
-            + [bytes([market.vaultSignerNonce])]
-            + [bytes(7)],
-            OPENBOOK_MARKET,
-        )
-        self.marketEventQueue = market.eventQueue
+    def __init__(self, data):
+        for key, value in data.items():
+            setattr(self, key, value)
+
+    @classmethod
+    def from_market(cls, market: MARKET_STATE_LAYOUT_V3):
+        data = {
+            "id": get_associated_id(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress),
+            "baseMint": market.baseMint,
+            "quoteMint": market.quoteMint,
+            "authority": RAYDIUM_AMM_AUTHORITY,
+            "openOrders": get_associated_open_orders(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress),
+            "targetOrders": get_associated_target_orders(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress),
+            "baseVault": get_associated_base_vault(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress),
+            "quoteVault": get_associated_quote_vault(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress),
+            "marketId": market.ownAddress,
+            "marketBids": market.bids,
+            "marketAsks": market.asks,
+            "marketBaseVault": market.baseVault,
+            "marketQuoteVault": market.quoteVault,
+            "marketAuthority": Pubkey.create_program_address(
+                [bytes(market.ownAddress), bytes([market.vaultSignerNonce]), bytes(7)],
+                OPENBOOK_MARKET,
+            ),
+            "marketEventQueue": market.eventQueue
+        }
+        return cls(data)
+
+    @classmethod
+    def from_json(cls, data: dict):
+        data = {key: Pubkey.from_string(value) for key, value in data.items()}
+        return cls(data)
+
+    def to_json(self):
+        return {key: str(getattr(self, key)) for key in vars(self)}
