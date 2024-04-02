@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SOLANA BOT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css"/>
+    <script src="https://unpkg.com/element-plus"></script>
+    <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+    </style>
+
+</head>
+<body>
+<div id="app">
+    <div style="margin: 20px">
+        <el-card>
+            <div style="font-size: 26px;color: #303133;font-weight: bold">
+                SOLANA BOT
+            </div>
+        </el-card>
+    </div>
+    <div style="margin: 20px">
+        <el-tabs v-model="activeName">
+            <el-tab-pane label="应用配置" name="config">
+                <div>
+                    <el-form
+                            label-width="auto"
+                            :model="configForm"
+                    >
+                        <el-space wrap>
+                            <el-form-item label="狙击模式">
+                                <el-switch v-model="configForm.USE_SNIPE_LIST"/>
+                            </el-form-item>
+                            <el-form-item label="自动出售">
+                                <el-switch v-model="configForm.AUTO_SELL_STATUS"/>
+                            </el-form-item>
+                            <el-form-item label="启用JITO">
+                                <el-switch v-model="configForm.JITO_STATUS"/>
+                            </el-form-item>
+                        </el-space>
+                        <el-form-item label="购买重试次数">
+                            <el-input v-model="configForm.MAX_BUY_RETRIES"/>
+                        </el-form-item>
+                        <el-form-item label="出售重试次数">
+                            <el-input v-model="configForm.MAX_SELL_RETRIES"/>
+                        </el-form-item>
+                        <el-form-item label="出售延迟时间">
+                            <el-input v-model="configForm.AUTO_SELL_TIME"/>
+                        </el-form-item>
+                        <el-form-item label="MicroLamports">
+                            <el-input v-model="configForm.MICROLAMPORTS"/>
+                        </el-form-item>
+                        <el-form-item label="JITO购买小费">
+                            <el-input v-model="configForm.JITO_BUY_TIP_AMOUNT"/>
+                        </el-form-item>
+                        <el-form-item label="JITO出售小费">
+                            <el-input v-model="configForm.JITO_SELL_TIP_AMOUNT"/>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="setConfig">保存</el-button>
+                            <el-button @click="getConfig">刷新</el-button>
+                        </el-form-item>
+                    </el-form>
+                </div>
+            </el-tab-pane>
+            <el-tab-pane label="快速交易" name="pay">Task</el-tab-pane>
+            <el-tab-pane label="狙击任务" name="task">
+                <div>
+                    <el-button type="primary" @click="openAddTasks">新增</el-button>
+                    <el-button @click="getTasks">刷新</el-button>
+                </div>
+                <el-divider></el-divider>
+                <el-table :data="tasksData" max-height="600">
+                    <el-table-column prop="baseMint" label="baseMint"></el-table-column>
+                    <el-table-column prop="amount" label="amount"></el-table-column>
+                    <el-table-column prop="status" label="status">
+                        <template #default="scope">
+                            <template v-if="scope.row.status==0">
+                                <el-tag>待处理</el-tag>
+                            </template>
+                            <template v-else>
+                                <el-tag type="success">已结束</el-tag>
+                            </template>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="updatedAt" label="updatedAt"></el-table-column>
+                    <el-table-column align="right" label="operations">
+                        <template #default="scope">
+                            <el-button size="small" type="danger" @click="deleteTasks(scope.row)">删除
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-tab-pane>
+            <el-tab-pane label="任务日志" name="tasksLog">
+                <div>
+                    <el-button type="primary" @click="deleteTasksLog">一键清空</el-button>
+                    <el-button @click="getTasksLog">刷新</el-button>
+                </div>
+                <el-divider></el-divider>
+                <el-scrollbar height="600px">
+                    <template v-for="item in tasksLogData">
+                        <template v-if="item.type===1">
+                            <div v-if="item.status===1" class="scrollbar-demo-item">
+                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
+                                <el-space wrap style="margin-left: 20px">
+                                    <el-link type="success" @click="open_solscan(item)">solscan</el-link>
+                                    <el-link type="success" @click="open_dexscreener(item)">dexscreener</el-link>
+                                </el-space>
+                            </div>
+                            <div v-else class="scrollbar-demo-item">
+                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
+                            </div>
+                        </template>
+                        <template v-if="item.type===2">
+                            <div v-if="item.status===1" class="scrollbar-demo-item">
+                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
+                                <el-space wrap>
+                                    <el-link type="primary" @click="open_solscan(item)">solscan</el-link>
+                                    <el-link type="primary" @click="open_dexscreener(item)">dexscreener</el-link>
+                                </el-space>
+                            </div>
+                            <div v-else class="scrollbar-demo-item">
+                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
+                            </div>
+                        </template>
+                    </template>
+                </el-scrollbar>
+            </el-tab-pane>
+        </el-tabs>
+    </div>
+    <el-dialog v-model="addTasksVisible" title="新增狙击任务">
+        <el-form :model="addTasksData" label-position="top">
+            <el-form-item label="baseMint">
+                <el-input v-model="addTasksData.baseMint"/>
+            </el-form-item>
+            <el-form-item label="amount">
+                <el-input v-model="addTasksData.amount"/>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button @click="addTasksVisible = false">取消</el-button>
+                <el-button type="primary" @click="addTasks">新增</el-button>
+            </div>
+        </template>
+    </el-dialog>
+</div>
+
+</body>
+
+<script>
+    const {createApp, ref} = Vue
+    const {ElMessage, ElNotification} = ElementPlus;
+    createApp({
+        setup() {
+            const {createApp, ref} = Vue
+
+            const activeName = ref('pay')
+
+            const configForm = ref({
+                USE_SNIPE_LIST: false,
+                MAX_BUY_RETRIES: 1,
+                MAX_SELL_RETRIES: 5,
+                MICROLAMPORTS: 250000,
+                AUTO_SELL_STATUS: false,
+                AUTO_SELL_TIME: 60,
+                JITO_STATUS: false,
+                JITO_BUY_TIP_AMOUNT: 0.00001,
+                JITO_SELL_TIP_AMOUNT: 0.00001,
+            })
+
+            const tasksData = ref([])
+
+            const tasksLogData = ref([])
+
+            const addTasksVisible = ref(false)
+
+            const addTasksData = ref({
+                "baseMint": "",
+                "amount": ""
+            })
+
+            const getConfig = () => {
+                axios.get('/api/get_config')
+                    .then(function (response) {
+                        configForm.value = response.data
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+            }
+
+            const setConfig = () => {
+                axios.post('/api/set_config', configForm.value)
+                    .then(function (response) {
+                        // 请求成功时的处理
+                        ElMessage({message: response.data, type: 'success'})
+                        getConfig()
+                    })
+                    .catch(function (error) {
+                        // 请求失败时的处理
+                        console.error(error);
+                    });
+            }
+
+            const openAddTasks = () => {
+                addTasksVisible.value = true
+                addTasksData.value = {
+                    "baseMint": "",
+                    "amount": ""
+                }
+            }
+
+            const getTasks = () => {
+                axios.get('/api/get_tasks')
+                    .then(function (response) {
+                        console.log(response);
+                        tasksData.value = response.data
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+            }
+
+            const addTasks = () => {
+                axios.post('/api/create_tasks', addTasksData.value)
+                    .then(function (response) {
+                        // 请求成功时的处理
+                        console.log(response);
+                        ElMessage({message: response.data, type: 'success'})
+                        getTasks()
+                        addTasksVisible.value = false
+                    })
+                    .catch(function (error) {
+                        // 请求失败时的处理
+                        console.error(error);
+                    });
+            }
+
+            const deleteTasks = (data) => {
+                axios.post('/api/delete_tasks', {"id": data.id})
+                    .then(function (response) {
+                        // 请求成功时的处理
+                        console.log(response);
+                        ElMessage({message: response.data, type: 'success'})
+                        getTasks()
+                    })
+                    .catch(function (error) {
+                        // 请求失败时的处理
+                        console.error(error);
+                    });
+            }
+
+            const getTasksLog = () => {
+                axios.get('/api/get_tasks_log')
+                    .then(function (response) {
+                        console.log(response);
+                        tasksLogData.value = response.data
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+            }
+
+            const deleteTasksLog = () => {
+                axios.get('/api/delete_tasks_log')
+                    .then(function (response) {
+                        console.log(response);
+                        getTasksLog()
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+            }
+
+            const open_solscan = (data) => {
+                const url = "https://solscan.io/tx/" + data.tx
+                window.open(url, "_blank");
+            }
+            const open_dexscreener = (data) => {
+                const url = "https://dexscreener.com/solana/" + data.baseMint + "?maker=" + data.pubkey
+                window.open(url, "_blank");
+            }
+
+            getConfig()
+            getTasks()
+            getTasksLog()
+            return {
+                activeName,
+                configForm,
+                getConfig,
+                setConfig,
+                tasksData,
+                addTasksVisible,
+                addTasksData,
+                openAddTasks,
+                addTasks,
+                deleteTasks,
+                getTasks,
+                getTasksLog,
+                deleteTasksLog,
+                tasksLogData,
+                open_solscan,
+                open_dexscreener
+
+            }
+        }
+    }).use(ElementPlus).mount('#app')
+</script>
+<style>
+    .scrollbar-demo-item {
+        margin: 10px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        background: var(--el-color-primary-light-9);
+        color: var(--el-color-primary);
+        flex-grow: 1; /* 文本框自动伸展填充空间 */
+        word-wrap: break-word; /* 允许长单词自动换行 */
+    }
+</style>
+</html>

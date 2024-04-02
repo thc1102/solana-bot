@@ -9,6 +9,20 @@ from utils.liquidity_utils import get_associated_id, get_associated_open_orders,
 
 class PoolInfo:
     def __init__(self, data):
+        self.id = None
+        self.baseMint = None
+        self.authority = None
+        self.openOrders = None
+        self.targetOrders = None
+        self.baseVault = None
+        self.quoteVault = None
+        self.marketId = None
+        self.marketBids = None
+        self.marketAsks = None
+        self.marketEventQueue = None
+        self.marketBaseVault = None
+        self.marketQuoteVault = None
+        self.marketAuthority = None
         for key, value in data.items():
             setattr(self, key, value)
 
@@ -32,8 +46,7 @@ class PoolInfo:
                 [bytes(market.ownAddress), bytes([market.vaultSignerNonce]), bytes(7)],
                 OPENBOOK_MARKET,
             ),
-            "marketEventQueue": market.eventQueue,
-            "lpMint": get_associated_lp_mint(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress)
+            "marketEventQueue": market.eventQueue
         }
         return cls(data)
 

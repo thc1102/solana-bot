@@ -53,7 +53,7 @@ async def connect_and_subscribe():
     # 连接到 RPC WebSocket 并订阅 OpenBook 数据
     while True:
         try:
-            async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT) as wss:
+            async with connect(AppConfig.RPC_WEBSOCKET_ENDPOINT, max_queue=10 ** 3) as wss:
                 logger.info("成功连接到 RPC WebSocket")
                 subscription_id = await subscribe_openbook(wss)
                 await wss.program_unsubscribe(subscription_id)
