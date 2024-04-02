@@ -2,21 +2,21 @@ import asyncio
 import json
 
 import websockets
+from asyncstdlib import enumerate
 from loguru import logger
 from solana.rpc.commitment import Confirmed
 from solana.rpc.types import MemcmpOpts, DataSliceOpts
 from solana.rpc.websocket_api import connect
-from asyncstdlib import enumerate
-
-from solana_dex.model.pool import PoolInfo
-from solana_dex.common.constants import SOL_MINT_ADDRESS, OPENBOOK_MARKET
-from solana_dex.layout.market import MARKET_STATE_LAYOUT_V3
 
 from settings.config import AppConfig
+from solana_dex.common.constants import SOL_MINT_ADDRESS, OPENBOOK_MARKET
+from solana_dex.layout.market import MARKET_STATE_LAYOUT_V3
+from solana_dex.model.pool import PoolInfo
 from utils.redis_utils import RedisFactory
 
 
 async def parse_openbook_data(data):
+    # 解析订阅的 OpenBook 数据
     try:
         info = MARKET_STATE_LAYOUT_V3.parse(data.result.value.account.data)
         async with RedisFactory() as r:
