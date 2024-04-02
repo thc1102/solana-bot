@@ -20,7 +20,7 @@ async def parse_openbook_data(data):
     try:
         info = MARKET_STATE_LAYOUT_V3.parse(data.result.value.account.data)
         print(info)
-        # print(PoolInfo(info).__dict__)
+        print(PoolInfo(info).__dict__)
         # async with RedisFactory() as r:
         #     await r.setnx(f"market:{str(Pubkey.from_bytes(info.baseMint))}", pickle.dumps(MarketState(info)))
     except Exception as e:

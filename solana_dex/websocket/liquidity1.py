@@ -19,8 +19,8 @@ async def parse_liqudity_data(data):
     try:
         if not data.result.value.err:
             logger.info(data.result.value)
-            logger.info((await solana_client.get_transaction(data.result.value.signature, commitment=Confirmed,
-                                                             max_supported_transaction_version=2)))
+            # logger.info((await solana_client.get_transaction(data.result.value.signature, commitment=Confirmed,
+            #                                                  max_supported_transaction_version=2)))
         # await TasksProcessor.liqudity_tasks(str(data.result.value.pubkey), liqudity_info)
     except Exception as e:
         logger.error(e)
@@ -32,9 +32,8 @@ async def run():
         try:
             async with connect(
                     "wss://aged-few-sailboat.solana-mainnet.quiknode.pro/a59a384a0e707c877100881079c24ebfee00eb1b/") as wss:
-                await wss.logs_subscribe(
-                    RpcTransactionLogsFilterMentions(
-                        Pubkey.from_string("7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5")), Processed
+                await wss.program_subscribe(
+                    Pubkey.from_string("7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5"), Processed
                     # data_slice=DataSliceOpts(length=752, offset=0),
                     # filters=[
                     #     MemcmpOpts(offset=432, bytes="So11111111111111111111111111111111111111112"),
@@ -45,7 +44,7 @@ async def run():
                 subscription_id = first_resp[0].result
                 async for idx, updated_info in enumerate(wss):
                     asyncio.create_task(parse_liqudity_data(updated_info[0]))
-                await wss.logs_unsubscribe(subscription_id)
+                await wss.program_unsubscribe(subscription_id)
         except (ConnectionResetError, websockets.exceptions.ConnectionClosedError) as e:
             logger.error(f"发生错误 {e} 正在重试...")
             continue
