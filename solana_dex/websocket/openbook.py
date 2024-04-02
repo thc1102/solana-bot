@@ -21,9 +21,9 @@ async def parse_openbook_data(data):
     try:
         info = MARKET_STATE_LAYOUT_V3.parse(data.result.value.account.data)
         print(PoolInfo.from_market(info).__dict__)
-        async with RedisFactory() as r:
-            pool_info = PoolInfo.from_market(info).to_json()
-            await r.setnx(f"pool:{pool_info.get('baseMint')}", json.dumps(pool_info))
+        # async with RedisFactory() as r:
+        #     pool_info = PoolInfo.from_market(info).to_json()
+        #     await r.setnx(f"pool:{pool_info.get('baseMint')}", json.dumps(pool_info))
     except Exception as e:
         logger.exception(e)
 
@@ -42,8 +42,8 @@ async def run():
                 first_resp = await wss.recv()
                 subscription_id = first_resp[0].result
                 async for idx, updated_info in enumerate(wss):
-                    # asyncio.create_task(parse_openbook_data(updated_info[0]))
-                    await parse_openbook_data(updated_info[0])
+                    asyncio.create_task(parse_openbook_data(updated_info[0]))
+                    # await parse_openbook_data(updated_info[0])
                 await wss.program_unsubscribe(subscription_id)
         except (ConnectionResetError, websockets.exceptions.ConnectionClosedError) as e:
             logger.error(f"发生错误 {e} 正在重试...")

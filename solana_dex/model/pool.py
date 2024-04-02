@@ -4,7 +4,7 @@ from solana_dex.common.constants import OPENBOOK_MARKET, RAY_AUTHORITY_V4, RAYDI
     RAYDIUM_AMM_AUTHORITY
 from solana_dex.layout.market import MARKET_STATE_LAYOUT_V3
 from utils.liquidity_utils import get_associated_id, get_associated_open_orders, get_associated_target_orders, \
-    get_associated_base_vault, get_associated_quote_vault
+    get_associated_base_vault, get_associated_quote_vault, get_associated_lp_mint
 
 
 class PoolInfo:
@@ -32,7 +32,8 @@ class PoolInfo:
                 [bytes(market.ownAddress), bytes([market.vaultSignerNonce]), bytes(7)],
                 OPENBOOK_MARKET,
             ),
-            "marketEventQueue": market.eventQueue
+            "marketEventQueue": market.eventQueue,
+            "lpMint": get_associated_lp_mint(RAYDIUM_LIQUIDITY_POOL_V4, market.ownAddress)
         }
         return cls(data)
 
