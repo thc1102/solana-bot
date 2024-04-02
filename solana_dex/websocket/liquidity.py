@@ -4,12 +4,11 @@ import websockets
 from asyncstdlib import enumerate
 from loguru import logger
 from solana.rpc.commitment import Processed
-from solana.rpc.types import DataSliceOpts, MemcmpOpts
+from solana.rpc.types import DataSliceOpts
 from solana.rpc.websocket_api import connect
 # from solana_dex.tasks_processor import TasksProcessor
 
-from solana_dex.common.constants import RAYDIUM_LIQUIDITY_POOL_V4
-from solana_dex.layout.raydium import LIQUIDITY_STATE_LAYOUT_V4
+from solana.common import RAYDIUM_LIQUIDITY_POOL_V4
 
 
 async def parse_liqudity_data(data):

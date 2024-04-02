@@ -1,20 +1,16 @@
 import asyncio
-import json
-import pickle
 
 import websockets
 from loguru import logger
-from solana.rpc.commitment import Processed, Confirmed
+from solana.rpc.commitment import Confirmed
 from solana.rpc.types import MemcmpOpts, DataSliceOpts
 from solana.rpc.websocket_api import connect
 from asyncstdlib import enumerate
-from solders.pubkey import Pubkey
 
-from solana_dex.model.pool import PoolInfo
-from utils.redis_utils import RedisFactory
+from solana.model import PoolInfo
 # from settings.config import AppConfig
-from solana_dex.common.constants import SOL_MINT_ADDRESS, OPENBOOK_MARKET
-from solana_dex.layout.market import MARKET_STATE_LAYOUT_V3
+from solana.common import SOL_MINT_ADDRESS, OPENBOOK_MARKET
+from solana.layout import MARKET_STATE_LAYOUT_V3
 
 
 async def parse_openbook_data(data):

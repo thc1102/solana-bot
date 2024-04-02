@@ -1,12 +1,15 @@
+import asyncio
 from typing import Optional
 
 import redis.asyncio as redis
 from redis.asyncio import Redis
 
+from settings.config import AppConfig
+
 
 class RedisFactory:
     # redis 连接池
-    _pool = redis.ConnectionPool.from_url("redis://127.0.0.1:6379")
+    _pool = redis.ConnectionPool.from_url(AppConfig.REDIS_URL)
 
     def __init__(self):
         self._pool = self.__class__._pool
