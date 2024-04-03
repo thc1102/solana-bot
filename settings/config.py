@@ -12,7 +12,7 @@ class Config(BaseSettings):
     MAX_SELL_RETRIES: int = 5
     MICROLAMPORTS: int = 250000
     AUTO_SELL_STATUS: bool = False
-    AUTO_SELL_TIME: int = 60
+    AUTO_SELL_TIME: int = 30
     WEB_PORT: int = 5000
     JITO_ENGINE: str = "tokyo.mainnet.block-engine.jito.wtf"
     JITO_STATUS: bool = False

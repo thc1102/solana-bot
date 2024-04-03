@@ -59,8 +59,9 @@ async def run():
         await init_db()
         # 初始化钱包
         await init_wallet()
-        # 初始化jito客户端获取小费账户
-        await inti_jito_client()
+        if AppConfig.JITO_STATUS:
+            # 初始化jito客户端并更新小费账户
+            await inti_jito_client()
         if not AppConfig.OPENBOOK_STATUS:
             # 启动websocket监控
             asyncio.create_task(openbook.connect_and_subscribe())
