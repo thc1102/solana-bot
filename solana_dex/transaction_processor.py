@@ -1,4 +1,5 @@
 import asyncio
+import json
 import pickle
 
 from loguru import logger
@@ -11,6 +12,7 @@ from solana_dex.model.pool import PoolInfo
 from solana_dex.swap.swap_core import SwapCore
 from utils.client_utils import AsyncClientFactory
 from utils.public import update_snipe_status
+from utils.redis_utils import RedisFactory
 
 
 async def send_with_retry(func, max_attempts=1, delay=0.2):
@@ -96,7 +98,49 @@ class TransactionProcessor:
                                       txn_signature)
             else:
                 logger.error(f"{txn_signature} 上链失败")
-                await create_task_log(wallet.pubkey, pool_info.baseMint, "", "上链完成", 0, 3,
+                await create_task_log(wallet.pubkey, pool_info.baseMint, "", "上链失败", 0, 3,
                                       txn_signature)
                 return False
         return True
+
+    @staticmethod
+    async def _web_transaction(base_mint: str, amount, is_buy: bool):
+        async with RedisFactory() as redis:
+            pool_info_bytes = await redis.get(f"pool:{base_mint}")
+        if pool_info_bytes is None:
+            logger.error(f"web交易 {base_mint} 未匹配到池key信息")
+            return
+        pool_info = PoolInfo.from_json(json.loads(pool_info_bytes))
+        if not pool_info:
+            return False, "获取流动池信息失败"
+        wallet = GlobalVariables.default_wallet
+        async with AsyncClientFactory() as client:
+            swap = SwapCore(client, wallet, pool_info, jito_status=AppConfig.JITO_STATUS,
+                            compute_unit_price=AppConfig.MICROLAMPORTS)
+            if not is_buy:
+                pool_info = pickle.loads(pool_info)
+                token_data = wallet.get_token_accounts(base_mint)
+                amount = int(amount * (10 ** token_data.decimals))
+                txn_signature = await swap.sell(pool_info.baseMint, amount)
+            else:
+                txn_signature = await swap.buy(pool_info.baseMint, amount)
+            if not txn_signature:
+                return False, "创建任务失败"
+            status = await swap.confirm_transaction(txn_signature)
+            # 上链失败等于出售失败
+            if status:
+                logger.info(f"{txn_signature} 上链成功")
+                await create_task_log(wallet.pubkey, pool_info.baseMint, "", "上链完成", 1, 3, txn_signature)
+                return True, "创建任务成功 上链成功"
+            else:
+                logger.error(f"{txn_signature} 上链失败")
+                await create_task_log(wallet.pubkey, pool_info.baseMint, "", "上链失败", 0, 3, txn_signature)
+                return False, "创建任务成功 上链失败"
+
+    @staticmethod
+    async def web_buy(base_mint: str, amount: float):
+        return await TransactionProcessor._web_transaction(base_mint, amount, is_buy=True)
+
+    @staticmethod
+    async def web_sell(base_mint: str, amount: float):
+        return await TransactionProcessor._web_transaction(base_mint, amount, is_buy=False)

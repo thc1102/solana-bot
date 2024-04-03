@@ -23,7 +23,7 @@ from utils.swap_utils import SwapTransactionBuilder
 
 class SwapCore:
     def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo = None,
-                 compute_unit_price: int = 2500, sol_type=False, jito_status=False, is_simulate=False):
+                 compute_unit_price: int = 2500, sol_type=False, jito_status=False, is_simulate=True):
         self.client = client
         self.wallet = wallet
         self.pool_info = pool_info
