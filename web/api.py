@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 from orm.tasks import Tasks, TasksLog
 from settings.config import AppConfig
+from settings.global_variables import GlobalVariables
+from solana_dex.common.constants import SOL_MINT_ADDRESS
 from utils.public import update_snipe_list, update_object, custom_datetime_serializer
 
 router = APIRouter(prefix="/api")
@@ -97,3 +99,34 @@ async def get_tasks_log():
 async def delete_tasks_log():
     await TasksLog.all().delete()
     return "日志记录已全部清空"
+
+
+@router.get("/get_wallet")
+async def get_wallet():
+    if GlobalVariables.default_wallet is not None:
+        wallet = {
+            "pubkey": str(GlobalVariables.default_wallet.pubkey),
+            "sol": await GlobalVariables.default_wallet.get_sol_balance(),
+            "wsol": GlobalVariables.default_wallet.get_token_accounts_balance(SOL_MINT_ADDRESS)
+        }
+        return wallet
+    return {
+        "pubkey": "加载失败 请稍后再试",
+        "sol": "",
+        "wsol": "",
+    }
+
+
+@router.get("/get_token")
+async def get_token():
+    await GlobalVariables.default_wallet.update_token_accounts()
+    account_list = []
+    for _, data in GlobalVariables.default_wallet.token_data.items():
+        if _ != str(SOL_MINT_ADDRESS):
+            account_list.append(
+                {
+                    "mint": data.mint,
+                    "amount": data.uiAmount
+                }
+            )
+    return account_list

@@ -72,12 +72,36 @@
             </el-tab-pane>
             <el-tab-pane label="快速交易" name="pay">
                 <div>
-                    <div>钱包地址: XXXXXXXXXXXXX</div>
-                    <div>SOL余额: 0.0001</div>
-                    <div>Wsol余额: 0.0001</div>
+                    <div>钱包地址: {{wallet.pubkey}}</div>
+                    <div>SOL余额: {{wallet.sol}}</div>
+                    <div>WSOL余额: {{wallet.wsol}}</div>
+                    <el-button type="primary" size="small" style="margin-top: 5px" @click="getWallet">
+                        刷新
+                    </el-button>
                 </div>
                 <el-divider></el-divider>
-
+                <el-form label-width="auto">
+                    <el-form-item label="地址输入">
+                        <el-input v-model="payData.mint" placeholder="请输入代币的地址" clearable/>
+                    </el-form-item>
+                    <el-form-item label="买卖数量">
+                        <el-input v-model="payData.amount" placeholder="请输入代币的数量" clearable/>
+                    </el-form-item>
+                    <div>
+                        <el-button type="primary">
+                            快速买入
+                        </el-button>
+                        <el-button type="danger">
+                            快速卖出
+                        </el-button>
+                    </div>
+                </el-form>
+                <el-divider></el-divider>
+                <el-table :data="tokenData" stripe table-layout="auto" size="small">
+                    <el-table-column prop="mint" label="baseMint"></el-table-column>
+                    <el-table-column prop="amount" label="amount"></el-table-column>
+                    <el-table-column label="operations"></el-table-column>
+                </el-table>
             </el-tab-pane>
             <el-tab-pane label="狙击任务" name="task">
                 <div>
@@ -85,7 +109,7 @@
                     <el-button @click="getTasks">刷新</el-button>
                 </div>
                 <el-divider></el-divider>
-                <el-table :data="tasksData" max-height="600">
+                <el-table :data="tasksData" max-height="600" table-layout="auto">
                     <el-table-column prop="baseMint" label="baseMint"></el-table-column>
                     <el-table-column prop="amount" label="amount"></el-table-column>
                     <el-table-column prop="status" label="status">
@@ -99,7 +123,7 @@
                         </template>
                     </el-table-column>
                     <el-table-column prop="updatedAt" label="updatedAt"></el-table-column>
-                    <el-table-column align="right" label="operations">
+                    <el-table-column label="operations">
                         <template #default="scope">
                             <el-button size="small" type="danger" @click="deleteTasks(scope.row)">删除
                             </el-button>
@@ -196,9 +220,22 @@
 
             const addTasksVisible = ref(false)
 
+            const tokenData = ref([])
+
             const addTasksData = ref({
                 "baseMint": "",
                 "amount": ""
+            })
+
+            const wallet = ref({
+                "pubkey": "",
+                "sol": "",
+                "wsol": ""
+            })
+
+            const payData = ref({
+                "mint": "",
+                "amount": "",
             })
 
             const getConfig = () => {
@@ -303,9 +340,33 @@
                 window.open(url, "_blank");
             }
 
+            const getWallet = () => {
+                axios.get('/api/get_wallet')
+                    .then(function (response) {
+                        console.log(response);
+                        wallet.value = response.data
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+            }
+
+            const getToken = () => {
+                axios.get('/api/get_token')
+                    .then(function (response) {
+                        console.log(response);
+                        tokenData.value = response.data
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+            }
+
             getConfig()
             getTasks()
             getTasksLog()
+            getWallet()
+            getToken()
             return {
                 activeName,
                 configForm,
@@ -322,8 +383,12 @@
                 deleteTasksLog,
                 tasksLogData,
                 open_solscan,
-                open_dexscreener
-
+                open_dexscreener,
+                payData,
+                wallet,
+                getWallet,
+                tokenData,
+                getToken
             }
         }
     }).use(ElementPlus).mount('#app')
