@@ -63,7 +63,7 @@ async def set_config(config: ConfigData):
 
 @router.get("/get_tasks")
 async def get_tasks():
-    tasks_list = await Tasks.all().order_by("-updatedAt")
+    tasks_list = await Tasks.all().order_by("-createdAt")
     # 序列化日期时间字段
     for task in tasks_list:
         task.updatedAt = custom_datetime_serializer(task.updatedAt)

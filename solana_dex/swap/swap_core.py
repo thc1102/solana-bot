@@ -1,5 +1,4 @@
-import asyncio
-import json
+import random
 import random
 import time
 from typing import Optional
@@ -12,20 +11,19 @@ from solana.rpc.async_api import AsyncClient
 from solana.rpc.commitment import Commitment, Processed
 from solders.pubkey import Pubkey
 
-from orm.tasks import TasksLog
+from orm.crud import create_task_log
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
 from solana_dex.common.constants import LAMPORTS_PER_SOL
 from solana_dex.model.pool import PoolInfo
 from solana_dex.swap.wallet import Wallet
-from utils.client_utils import AsyncClientFactory, JitoClientFactory
-from utils.redis_utils import RedisFactory
+from utils.client_utils import JitoClientFactory
 from utils.swap_utils import SwapTransactionBuilder
 
 
 class SwapCore:
     def __init__(self, client: AsyncClient, wallet: Wallet, pool_info: PoolInfo = None,
-                 compute_unit_price: int = 2500, sol_type=False, jito_status=False, is_simulate=True):
+                 compute_unit_price: int = 2500, sol_type=False, jito_status=False, is_simulate=False):
         self.client = client
         self.wallet = wallet
         self.pool_info = pool_info
@@ -114,28 +112,15 @@ class SwapCore:
             logger.error(e)
             return False
 
-    async def _create_task_log(self, mint: Pubkey, amount: str, msg: str, status: int, _type: int, tx: str = None):
-        log_data = {
-            "pubkey": self.wallet.pubkey,
-            "baseMint": mint,
-            "msg": msg,
-            "status": status,
-            "type": _type,
-            "amount": amount,
-        }
-        if tx:
-            log_data["tx"] = tx
-        asyncio.create_task(TasksLog.create(**log_data))
-
     async def buy(self, mint: Pubkey, amount: float):
         amount_in = int(amount * LAMPORTS_PER_SOL)
         try:
             txn_signature = await self._buy(mint, amount_in)
-            await self._create_task_log(mint, str(amount), "创建购买任务完成", 1, 1, txn_signature)
+            await create_task_log(self.wallet.pubkey, mint, str(amount), "创建购买任务完成", 1, 1, txn_signature)
             return txn_signature
         except Exception as e:
-            logger.exception(f"购买异常 {mint} 交易失败 {e}")
-            await self._create_task_log(mint, str(amount), "创建购买任务失败 购买异常", 0, 1)
+            logger.error(f"购买异常 {mint} 交易失败 {e}")
+            await create_task_log(self.wallet.pubkey, mint, str(amount), "创建购买任务失败 购买异常", 0, 1)
             return False
 
     async def sell(self, mint: Pubkey, amount: int = 0):
@@ -147,20 +132,21 @@ class SwapCore:
                     mint_amount = int(token_data.amount)
                     if mint_amount <= 0:
                         logger.info(f"出售失败 {mint} 代币余额不足")
-                        await self._create_task_log(mint, "", "创建出售任务失败 代币余额不足", 0, 2)
+                        await create_task_log(self.wallet.pubkey, mint, "", "创建出售任务失败 代币余额不足", 0, 2)
                         return False
                     txn_signature = await self._sell(mint_amount)
-                    await self._create_task_log(mint, str(token_data.uiAmount), "创建出售任务完成", 1, 2, txn_signature)
+                    await create_task_log(self.wallet.pubkey, mint, str(token_data.uiAmount), "创建出售任务完成", 1, 2,
+                                          txn_signature)
                     return txn_signature
                 else:
                     logger.info(f"出售失败 {mint} 代币不存在")
-                    await self._create_task_log(mint, "", "创建出售任务失败 代币不存在", 0, 2)
+                    await create_task_log(self.wallet.pubkey, mint, "", "创建出售任务失败 代币不存在", 0, 2)
                     return False
             else:
                 txn_signature = await self._sell(amount)
-                await self._create_task_log(mint, str(amount), "创建出售任务完成", 1, 2, txn_signature)
+                await create_task_log(self.wallet.pubkey, mint, str(amount), "创建出售任务完成", 1, 2, txn_signature)
                 return txn_signature
         except Exception as e:
             logger.error(f"出售异常 {mint} 交易失败 {e}")
-            await self._create_task_log(mint, "", "创建出售任务失败 出售异常", 0, 2)
+            await create_task_log(self.wallet.pubkey, mint, "", "创建出售任务失败 出售异常", 0, 2)
             return False

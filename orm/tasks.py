@@ -5,7 +5,9 @@ class Tasks(Model):
     id = fields.IntField(pk=True)
     baseMint = fields.CharField(max_length=50)
     amount = fields.FloatField()
+    type = fields.IntField(default=1)
     status = fields.IntField(default=0)
+    createdAt = fields.DatetimeField(auto_now_add=True)
     updatedAt = fields.DatetimeField(auto_now=True)
 
     class Meta:

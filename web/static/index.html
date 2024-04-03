@@ -123,12 +123,17 @@
                             <div v-if="item.status===1" class="scrollbar-demo-item">
                                 {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
                                 <el-space wrap>
-                                    <el-link type="primary" @click="open_solscan(item)">solscan</el-link>
-                                    <el-link type="primary" @click="open_dexscreener(item)">dexscreener</el-link>
+                                    <el-link type="success" @click="open_solscan(item)">solscan</el-link>
+                                    <el-link type="success" @click="open_dexscreener(item)">dexscreener</el-link>
                                 </el-space>
                             </div>
                             <div v-else class="scrollbar-demo-item">
                                 {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
+                            </div>
+                        </template>
+                        <template v-if="item.type===3">
+                            <div class="scrollbar-demo-item">
+                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.tx}}
                             </div>
                         </template>
                     </template>

@@ -3,7 +3,7 @@ import pickle
 
 from loguru import logger
 
-from orm.crud import update_task_status
+from orm.crud import update_task_status, create_task_log
 from orm.tasks import Tasks
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
@@ -42,7 +42,8 @@ class TransactionProcessor:
             # 获取默认钱包地址
             wallet = GlobalVariables.default_wallet
             async with AsyncClientFactory() as client:
-                swap = SwapCore(client, wallet, pool_info, compute_unit_price=AppConfig.MICROLAMPORTS)
+                swap = SwapCore(client, wallet, pool_info, jito_status=AppConfig.JITO_STATUS,
+                                compute_unit_price=AppConfig.MICROLAMPORTS)
                 amount = float(task_info.amount)
                 # 购买操作
                 txn_signature = await send_with_retry(lambda: swap.buy(pool_info.baseMint, amount),
@@ -57,8 +58,12 @@ class TransactionProcessor:
                 # 上链失败等于购买失败
                 if status:
                     logger.info(f"{txn_signature} 上链完成")
+                    await create_task_log(wallet.pubkey, pool_info.baseMint, str(task_info.amount), "上链完成", 1, 3,
+                                          txn_signature)
                 else:
                     logger.error(f"{txn_signature} 上链失败")
+                    await create_task_log(wallet.pubkey, pool_info.baseMint, str(task_info.amount), "上链失败", 0, 3,
+                                          txn_signature)
                     return False
                 if not AppConfig.AUTO_SELL_STATUS:
                     return True
@@ -74,7 +79,8 @@ class TransactionProcessor:
         # 获取默认钱包
         wallet = GlobalVariables.default_wallet
         async with AsyncClientFactory() as client:
-            swap = SwapCore(client, wallet, pool_info, compute_unit_price=AppConfig.MICROLAMPORTS)
+            swap = SwapCore(client, wallet, pool_info, jito_status=AppConfig.JITO_STATUS,
+                            compute_unit_price=AppConfig.MICROLAMPORTS)
             if sleep != 0:
                 await asyncio.sleep(AppConfig.AUTO_SELL_TIME)
             txn_signature = await send_with_retry(lambda: swap.sell(pool_info.baseMint),
@@ -86,7 +92,11 @@ class TransactionProcessor:
             # 上链失败等于出售失败
             if status:
                 logger.info(f"{txn_signature} 上链完成")
+                await create_task_log(wallet.pubkey, pool_info.baseMint, "", "上链完成", 1, 3,
+                                      txn_signature)
             else:
                 logger.error(f"{txn_signature} 上链失败")
+                await create_task_log(wallet.pubkey, pool_info.baseMint, "", "上链完成", 0, 3,
+                                      txn_signature)
                 return False
         return True
