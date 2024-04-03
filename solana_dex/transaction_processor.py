@@ -56,8 +56,8 @@ class TransactionProcessor:
                 TransactionProcessor.exclude_buy_set.discard(pool_info.baseMint)
                 if not txn_signature:
                     return False
-                status, _ = TransactionProcessor._confirm_transaction(swap, txn_signature, wallet.pubkey,
-                                                                      pool_info.baseMint)
+                status, _ = await TransactionProcessor._confirm_transaction(swap, txn_signature, wallet.pubkey,
+                                                                            pool_info.baseMint)
                 if not status:
                     return False
                 if not AppConfig.AUTO_SELL_STATUS:
@@ -84,8 +84,8 @@ class TransactionProcessor:
                                                       delay=0.2)
                 if not txn_signature:
                     return False
-                status, _ = TransactionProcessor._confirm_transaction(swap, txn_signature, wallet.pubkey,
-                                                                      pool_info.baseMint)
+                status, _ = await TransactionProcessor._confirm_transaction(swap, txn_signature, wallet.pubkey,
+                                                                            pool_info.baseMint)
                 return status
         except Exception as e:
             logger.error(e)

@@ -11,6 +11,7 @@ from settings.global_variables import GlobalVariables
 from solana_dex.layout.raydium import LIQUIDITY_STATE_LAYOUT_V4
 from solana_dex.model.pool import PoolInfo
 from solana_dex.transaction_processor import TransactionProcessor
+from utils.public import update_snipe_status
 from utils.redis_utils import RedisFactory
 
 
@@ -23,7 +24,7 @@ class TasksProcessor:
     @staticmethod
     async def liquidity_tasks(liquidity_info: LIQUIDITY_STATE_LAYOUT_V4):
         if await TasksProcessor.expire_cache.exists(liquidity_info.baseMint):
-            # logger.debug(f"{liquidity_info.baseMint} 60秒内检测到一次 跳过再次检测")
+            logger.debug(f"{liquidity_info.baseMint} 60秒内检测到一次 跳过再次检测")
             return
         await TasksProcessor.expire_cache.set(liquidity_info.baseMint, True, ttl=60)
         if not AppConfig.USE_SNIPE_LIST:
@@ -32,9 +33,16 @@ class TasksProcessor:
         if task_info is None:
             return
         async with RedisFactory() as redis:
-            pool_info_bytes = await redis.get(f"pool:{liquidity_info.baseMint}")
+            for i in range(5):
+                pool_info_bytes = await redis.get(f"pool:{liquidity_info.baseMint}")
+                if pool_info_bytes:
+                    break
+                await asyncio.sleep(0.1)
         if pool_info_bytes is None:
-            logger.error(f"{liquidity_info.baseMint} 未匹配到池key信息")
+            logger.error(f"{liquidity_info.baseMint} 未匹配到池key信息 已经无狙击优势 默认结束")
+            await TasksProcessor.expire_cache.delete(liquidity_info.baseMint)
+            # 超过5次没匹配到流动池 默认结束
+            asyncio.create_task(update_snipe_status(task_info))
             return
         logger.info(f"匹配到狙击任务 {liquidity_info.baseMint}")
         pool_info = PoolInfo.from_json(json.loads(pool_info_bytes))
