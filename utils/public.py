@@ -2,6 +2,7 @@ import asyncio
 import datetime
 from typing import Union, Any
 
+import pytz
 from loguru import logger
 
 from orm.crud import update_task_status
@@ -38,7 +39,11 @@ def update_object(obj, data):
 
 
 def custom_datetime_serializer(dt: Union[datetime, None]) -> Any:
+    # 设置时区为北京时间
+    beijing_tz = pytz.timezone('Asia/Shanghai')
+
     # 序列化日期时间
     if dt is None:
         return None
+    dt = dt.astimezone(beijing_tz)
     return dt.strftime('%Y-%m-%d %H:%M:%S')

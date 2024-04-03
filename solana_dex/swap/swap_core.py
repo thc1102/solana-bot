@@ -123,7 +123,7 @@ class SwapCore:
             await create_task_log(self.wallet.pubkey, mint, str(amount), "创建购买任务失败 购买异常", 0, 1)
             return False
 
-    async def sell(self, mint: Pubkey, amount: int = 0):
+    async def sell(self, mint: Pubkey, amount: int = 0, ui_amount: float = 0):
         try:
             if amount == 0:
                 await self.wallet.update_token_accounts()
@@ -144,9 +144,29 @@ class SwapCore:
                     return False
             else:
                 txn_signature = await self._sell(amount)
-                await create_task_log(self.wallet.pubkey, mint, str(amount), "创建出售任务完成", 1, 2, txn_signature)
+                await create_task_log(self.wallet.pubkey, mint, str(ui_amount), "创建出售任务完成", 1, 2, txn_signature)
                 return txn_signature
         except Exception as e:
             logger.error(f"出售异常 {mint} 交易失败 {e}")
             await create_task_log(self.wallet.pubkey, mint, "", "创建出售任务失败 出售异常", 0, 2)
+            return False
+
+    async def close_no_balance_account(self):
+        # 关闭无余额账户
+        try:
+            no_account = self.wallet.get_no_balance_account()
+            if len(no_account) == 0:
+                logger.info("没有需要清理的无余额代币账户")
+                return False
+            swap_transaction_builder = SwapTransactionBuilder(self.client, self.wallet.keypair)
+            for account in no_account:
+                swap_transaction_builder.append_close_account(account)
+            transaction = await swap_transaction_builder.compile_signed_transaction()
+            txn_signature = transaction.signatures[0]
+            transaction_bytes = transaction.serialize()
+            await self.client.send_raw_transaction(transaction_bytes)
+            logger.info(f"close_no_balance_account 任务创建完成 {txn_signature}")
+            return txn_signature
+        except Exception as e:
+            logger.error(e)
             return False

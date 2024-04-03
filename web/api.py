@@ -8,6 +8,7 @@ from orm.tasks import Tasks, TasksLog
 from settings.config import AppConfig
 from settings.global_variables import GlobalVariables
 from solana_dex.common.constants import SOL_MINT_ADDRESS
+from solana_dex.transaction_processor import TransactionProcessor
 from utils.public import update_snipe_list, update_object, custom_datetime_serializer
 
 router = APIRouter(prefix="/api")
@@ -35,6 +36,11 @@ class TasksData(BaseModel):
 class DeleteData(BaseModel):
     id: int = None
     ids: int = None
+
+
+class PayDate(BaseModel):
+    mint: str
+    amount: float
 
 
 @router.get("/get_config")
@@ -119,14 +125,44 @@ async def get_wallet():
 
 @router.get("/get_token")
 async def get_token():
-    await GlobalVariables.default_wallet.update_token_accounts()
-    account_list = []
-    for _, data in GlobalVariables.default_wallet.token_data.items():
-        if _ != str(SOL_MINT_ADDRESS):
-            account_list.append(
-                {
-                    "mint": data.mint,
-                    "amount": data.uiAmount
-                }
-            )
-    return account_list
+    if GlobalVariables.default_wallet is not None:
+        await GlobalVariables.default_wallet.update_token_accounts()
+        account_list = []
+        for _, data in GlobalVariables.default_wallet.token_data.items():
+            if _ != str(SOL_MINT_ADDRESS):
+                account_list.append(
+                    {
+                        "mint": data.mint,
+                        "amount": data.uiAmount
+                    }
+                )
+        return account_list
+    return []
+
+
+@router.post("/buy")
+async def buy(data: PayDate):
+    if data.amount <= 0:
+        return "输入的数量不合法"
+    status, msg = await TransactionProcessor.web_buy(data.mint, data.amount)
+    if status:
+        return "购买任务已下发"
+    else:
+        return msg
+
+
+@router.post("/sell")
+async def sell(data: PayDate):
+    if data.amount <= 0:
+        return "输入的数量不合法"
+    status, msg = await TransactionProcessor.web_sell(data.mint, data.amount)
+    if status:
+        return "出售任务已下发"
+    else:
+        return msg
+
+
+@router.get("/clone_account")
+async def clone_account():
+    _, msg = await TransactionProcessor.web_clone_account()
+    return msg

@@ -75,7 +75,7 @@
                     <div>钱包地址: {{wallet.pubkey}}</div>
                     <div>SOL余额: {{wallet.sol}}</div>
                     <div>WSOL余额: {{wallet.wsol}}</div>
-                    <el-button type="primary" size="small" style="margin-top: 5px" @click="getWallet">
+                    <el-button type="primary" plain size="small" style="margin-top: 5px" @click="getWallet">
                         刷新
                     </el-button>
                 </div>
@@ -88,19 +88,34 @@
                         <el-input v-model="payData.amount" placeholder="请输入代币的数量" clearable/>
                     </el-form-item>
                     <div>
-                        <el-button type="primary">
+                        <el-button @click="clearPayData">
+                            清空输入
+                        </el-button>
+                        <el-button type="primary" @click="buy">
                             快速买入
                         </el-button>
-                        <el-button type="danger">
+                        <el-button type="danger" @click="sell">
                             快速卖出
                         </el-button>
                     </div>
                 </el-form>
                 <el-divider></el-divider>
+                <div style="margin-bottom: 10px">
+                    <el-button size="small" @click="getToken" type="primary" plain>
+                        刷新所有账户
+                    </el-button>
+                    <el-button size="small" type="warning" plain @click="cloneAccount">
+                        注销余额为空的账户
+                    </el-button>
+                </div>
                 <el-table :data="tokenData" stripe table-layout="auto" size="small">
                     <el-table-column prop="mint" label="baseMint"></el-table-column>
-                    <el-table-column prop="amount" label="amount"></el-table-column>
-                    <el-table-column label="operations"></el-table-column>
+                    <el-table-column prop="amount" label="amount" width="200"></el-table-column>
+                    <el-table-column label="operations" width="200">
+                        <template #default="scope">
+                            <el-button size="small" type="primary" @click="inPayData(scope.row)">一键输入</el-button>
+                        </template>
+                    </el-table-column>
                 </el-table>
             </el-tab-pane>
             <el-tab-pane label="狙击任务" name="task">
@@ -109,10 +124,10 @@
                     <el-button @click="getTasks">刷新</el-button>
                 </div>
                 <el-divider></el-divider>
-                <el-table :data="tasksData" max-height="600" table-layout="auto">
+                <el-table :data="tasksData" stripe table-layout="auto">
                     <el-table-column prop="baseMint" label="baseMint"></el-table-column>
-                    <el-table-column prop="amount" label="amount"></el-table-column>
-                    <el-table-column prop="status" label="status">
+                    <el-table-column prop="amount" label="amount" width="200"></el-table-column>
+                    <el-table-column prop="status" label="status" width="200">
                         <template #default="scope">
                             <template v-if="scope.row.status==0">
                                 <el-tag>待处理</el-tag>
@@ -122,8 +137,8 @@
                             </template>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="updatedAt" label="updatedAt"></el-table-column>
-                    <el-table-column label="operations">
+                    <el-table-column prop="updatedAt" label="updatedAt" width="250"></el-table-column>
+                    <el-table-column label="operations" width="200">
                         <template #default="scope">
                             <el-button size="small" type="danger" @click="deleteTasks(scope.row)">删除
                             </el-button>
@@ -137,39 +152,37 @@
                     <el-button @click="getTasksLog">刷新</el-button>
                 </div>
                 <el-divider></el-divider>
-                <el-scrollbar height="600px">
-                    <template v-for="item in tasksLogData">
-                        <template v-if="item.type===1">
-                            <div v-if="item.status===1" class="scrollbar-demo-item">
-                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.amount}}
-                                <el-space wrap style="margin-left: 20px">
-                                    <el-link type="success" @click="open_solscan(item)">solscan</el-link>
-                                    <el-link type="success" @click="open_dexscreener(item)">dexscreener</el-link>
-                                </el-space>
-                            </div>
-                            <div v-else class="scrollbar-demo-item">
-                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
-                            </div>
+                <div style="font-size: 12px">
+                    <el-scrollbar height="600px">
+                        <template v-for="item in tasksLogData">
+                            <template v-if="item.type===1">
+                                <div v-if="item.status===1" class="scrollbar-demo-item">
+                                    {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.amount}}
+                                    <a @click.prevent="open_solscan(item)" href="" style="margin-left: 10px">solscan</a>
+                                    <a @click.prevent="open_dexscreener(item)" href="" style="margin-left: 10px">dexscreener</a>
+                                </div>
+                                <div v-else class="scrollbar-demo-item">
+                                    {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
+                                </div>
+                            </template>
+                            <template v-if="item.type===2">
+                                <div v-if="item.status===1" class="scrollbar-demo-item">
+                                    {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.amount}}
+                                    <a @click.prevent="open_solscan(item)" href="" style="margin-left: 10px">solscan</a>
+                                    <a @click.prevent="open_dexscreener(item)" href="" style="margin-left: 10px">dexscreener</a>
+                                </div>
+                                <div v-else class="scrollbar-demo-item">
+                                    {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
+                                </div>
+                            </template>
+                            <template v-if="item.type===3">
+                                <div class="scrollbar-demo-item">
+                                    {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.tx}}
+                                </div>
+                            </template>
                         </template>
-                        <template v-if="item.type===2">
-                            <div v-if="item.status===1" class="scrollbar-demo-item">
-                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.amount}}
-                                <el-space wrap style="margin-left: 20px">
-                                    <el-link type="success" @click="open_solscan(item)">solscan</el-link>
-                                    <el-link type="success" @click="open_dexscreener(item)">dexscreener</el-link>
-                                </el-space>
-                            </div>
-                            <div v-else class="scrollbar-demo-item">
-                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
-                            </div>
-                        </template>
-                        <template v-if="item.type===3">
-                            <div class="scrollbar-demo-item">
-                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.tx}}
-                            </div>
-                        </template>
-                    </template>
-                </el-scrollbar>
+                    </el-scrollbar>
+                </div>
             </el-tab-pane>
         </el-tabs>
     </div>
@@ -362,11 +375,98 @@
                     });
             }
 
+            const inPayData = (data) => {
+                payData.value = {
+                    "mint": data.mint,
+                    "amount": data.amount,
+                }
+            }
+            const clearPayData = () => {
+                payData.value = {
+                    "mint": "",
+                    "amount": "",
+                }
+            }
+
+            const buy = () => {
+                const data = payData.value
+                if (data.mint.length === 0) {
+                    ElMessage("代币地址不能为空")
+                    return
+                }
+                axios.post('/api/buy', data)
+                    .then(function (response) {
+                        // 请求成功时的处理
+                        console.log(response);
+                        ElNotification({
+                            title: '购买通知',
+                            message: response.data
+                        })
+                    })
+                    .catch(function (error) {
+                        // 请求失败时的处理
+                        console.error(error);
+                        ElNotification({
+                            title: '购买通知',
+                            message: "购买异常"
+                        })
+                    });
+            }
+
+            const sell = () => {
+                const data = payData.value
+                if (data.mint.length === 0) {
+                    ElMessage("代币地址不能为空")
+                    return
+                }
+                axios.post('/api/sell', data)
+                    .then(function (response) {
+                        // 请求成功时的处理
+                        console.log(response);
+                        ElNotification({
+                            title: '出售通知',
+                            message: response.data
+                        })
+                    })
+                    .catch(function (error) {
+                        // 请求失败时的处理
+                        console.error(error);
+                        ElNotification({
+                            title: '出售通知',
+                            message: "出售异常"
+                        })
+                    });
+            }
+
+            const cloneAccount = () => {
+                axios.get('/api/clone_account')
+                    .then(function (response) {
+                        console.log(response);
+                        ElNotification({
+                            title: '任务通知',
+                            message: response.data
+                        })
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                        ElNotification({
+                            title: '任务通知',
+                            message: "任务下发异常"
+                        })
+                    });
+            }
+
+            const refresh = () => {
+                getTasks()
+                getTasksLog()
+            }
+
             getConfig()
             getTasks()
             getTasksLog()
             getWallet()
             getToken()
+            setInterval(refresh, 3000);
             return {
                 activeName,
                 configForm,
@@ -388,7 +488,12 @@
                 wallet,
                 getWallet,
                 tokenData,
-                getToken
+                getToken,
+                inPayData,
+                clearPayData,
+                buy,
+                sell,
+                cloneAccount
             }
         }
     }).use(ElementPlus).mount('#app')
