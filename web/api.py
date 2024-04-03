@@ -43,6 +43,12 @@ class PayDate(BaseModel):
     amount: float
 
 
+@router.get("/version")
+async def version():
+    # 发布第一版
+    return "0.0.1"
+
+
 @router.get("/get_config")
 async def get_config():
     result = {

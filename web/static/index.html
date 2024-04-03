@@ -21,8 +21,10 @@
 <div id="app">
     <div style="margin: 20px">
         <el-card>
-            <div style="font-size: 26px;color: #303133;font-weight: bold">
-                SOLANA BOT
+            <div >
+                <span style="font-size: 26px;color: #303133;font-weight: bold">SOLANA BOT</span>
+                <span style="margin-left: 10px">{{version}}</span>
+
             </div>
         </el-card>
     </div>
@@ -251,6 +253,19 @@
                 "amount": "",
             })
 
+            const version = ref("")
+
+            const getVersion = () => {
+                axios.get('/api/version')
+                    .then(function (response) {
+                        version.value = response.data
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                        version.value = "获取失败"
+                    });
+            }
+
             const getConfig = () => {
                 axios.get('/api/get_config')
                     .then(function (response) {
@@ -461,6 +476,7 @@
                 getTasksLog()
             }
 
+            getVersion()
             getConfig()
             getTasks()
             getTasksLog()
@@ -493,7 +509,8 @@
                 clearPayData,
                 buy,
                 sell,
-                cloneAccount
+                cloneAccount,
+                version
             }
         }
     }).use(ElementPlus).mount('#app')
