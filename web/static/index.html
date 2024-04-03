@@ -109,7 +109,7 @@
                     <template v-for="item in tasksLogData">
                         <template v-if="item.type===1">
                             <div v-if="item.status===1" class="scrollbar-demo-item">
-                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
+                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.amount}}
                                 <el-space wrap style="margin-left: 20px">
                                     <el-link type="success" @click="open_solscan(item)">solscan</el-link>
                                     <el-link type="success" @click="open_dexscreener(item)">dexscreener</el-link>
@@ -121,8 +121,8 @@
                         </template>
                         <template v-if="item.type===2">
                             <div v-if="item.status===1" class="scrollbar-demo-item">
-                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}}
-                                <el-space wrap>
+                                {{item.updatedAt}} - {{item.baseMint}} - {{item.msg}} - {{item.amount}}
+                                <el-space wrap style="margin-left: 20px">
                                     <el-link type="success" @click="open_solscan(item)">solscan</el-link>
                                     <el-link type="success" @click="open_dexscreener(item)">dexscreener</el-link>
                                 </el-space>
