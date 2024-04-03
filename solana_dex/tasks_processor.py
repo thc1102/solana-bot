@@ -24,7 +24,7 @@ class TasksProcessor:
     @staticmethod
     async def liquidity_tasks(liquidity_info: LIQUIDITY_STATE_LAYOUT_V4):
         if await TasksProcessor.expire_cache.exists(liquidity_info.baseMint):
-            logger.debug(f"{liquidity_info.baseMint} 60秒内检测到一次 跳过再次检测")
+            # logger.debug(f"{liquidity_info.baseMint} 60秒内检测到一次 跳过再次检测")
             return
         await TasksProcessor.expire_cache.set(liquidity_info.baseMint, True, ttl=60)
         if not AppConfig.USE_SNIPE_LIST:
