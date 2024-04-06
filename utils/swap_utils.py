@@ -2,6 +2,7 @@ import time
 
 import solders.system_program as sp
 import spl.token.instructions as spl_token
+from loguru import logger
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.commitment import Finalized, Processed, Confirmed
 from solana.rpc.types import TokenAccountOpts
@@ -77,7 +78,10 @@ class SwapTransactionBuilder:
         self.new_keypair_list = []
 
     async def compile_signed_transaction(self):
-        recent_blockhash = (await self.client.get_latest_blockhash(Finalized)).value.blockhash
+        t = time.time()
+        response = await self.client.get_latest_blockhash(Processed)
+        logger.info(f"{response.context.slot}, {response.value.blockhash}, {time.time() - t}")
+        recent_blockhash = response.value.blockhash
         keypairs = [self.payer]
         if len(self.new_keypair_list) != 0:
             keypairs.extend(self.new_keypair_list)
