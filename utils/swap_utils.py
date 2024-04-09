@@ -79,7 +79,7 @@ class SwapTransactionBuilder:
 
     async def compile_signed_transaction(self):
         t = time.time()
-        response = await self.client.get_latest_blockhash(Processed)
+        response = await self.client.get_latest_blockhash(Confirmed)
         logger.info(f"{response.context.slot}, {response.value.blockhash}, {time.time() - t}")
         recent_blockhash = response.value.blockhash
         keypairs = [self.payer]
