@@ -7,7 +7,7 @@ from solders.pubkey import Pubkey
 from solana_dex.common.constants import SOL_MINT_ADDRESS
 from utils.client_utils import JitoClientFactory
 from solana_dex.websocket import openbook, liquidity
-from utils.public import update_snipe_list
+from utils.public import update_snipe_list, keep_connection_alive
 
 try:
     import uvloop
@@ -55,6 +55,8 @@ async def inti_jito_client():
 
 async def run():
     try:
+        # 客户端链接保活
+        asyncio.create_task(keep_connection_alive())
         # 初始化数据库
         await init_db()
         # 初始化钱包
